@@ -1,0 +1,274 @@
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcryptjs';
+import { UserRepository } from '../repositories/user.repository';
+import { PasswordResetRepository } from '../repositories/password-reset.repository';
+import { EmailChangeOtpRepository } from '../repositories/email-change-otp.repository';
+import { MailService } from './mail.service';
+import { LoginDto } from '../dto/login.dto';
+import { UpdateProfileDto } from '../dto/update-profile.dto';
+import { VerifyEmailChangeDto } from '../dto/verify-email-change.dto';
+import { UpdateEmailDto } from '../dto/update-email.dto';
+import { ChangePasswordDto } from '../dto/change-password.dto';
+import { PrismaService } from '../repositories/prisma.service';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private userRepository: UserRepository,
+    private passwordResetRepository: PasswordResetRepository,
+    private emailChangeOtpRepository: EmailChangeOtpRepository,
+    private jwtService: JwtService,
+    private configService: ConfigService,
+    private mailService: MailService,
+    private prisma: PrismaService,
+  ) {}
+
+  private formatUserResponse(user: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash, ...result } = user;
+    if (result.birthDate && result.birthDate instanceof Date) {
+      result.birthDate = result.birthDate.toISOString().split('T')[0];
+    }
+    if (result.enterpriseProfile?.licenseIssueDate instanceof Date) {
+      result.enterpriseProfile.licenseIssueDate = result.enterpriseProfile.licenseIssueDate
+        .toISOString()
+        .split('T')[0];
+    }
+    return result;
+  }
+
+  async login(dto: LoginDto) {
+    const username = dto.username!.toLowerCase();
+    const user = await this.userRepository.findUniqueByUsername(username);
+
+    if (!user) {
+      throw new UnauthorizedException(
+        'Tài khoản hoặc mật khẩu không đúng. Xin vui lòng thử lại',
+      );
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('Tài khoản của bạn đã bị khóa');
+    }
+
+    const isPasswordValid = await bcrypt.compare(dto.password!, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException(
+        'Tài khoản hoặc mật khẩu không đúng. Xin vui lòng thử lại',
+      );
+    }
+
+    const payload = { sub: user.id, email: user.email };
+
+    // Generate Access Token
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret:
+        this.configService.get<string>('JWT_SECRET') || 'super_secret_jwt_key',
+      expiresIn: (this.configService.get<string>('JWT_EXPIRES_IN') || '15m') as any,
+    });
+
+    // Generate Refresh Token
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      secret:
+        this.configService.get<string>('JWT_REFRESH_SECRET') ||
+        'super_secret_refresh_jwt_key',
+      expiresIn: (this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d') as any,
+    });
+
+    return {
+      message: 'Đăng nhập thành công',
+      accessToken,
+      refreshToken,
+      user: this.formatUserResponse(user),
+    };
+  }
+
+  async refreshTokens(refreshToken: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret:
+          this.configService.get<string>('JWT_REFRESH_SECRET') ||
+          'super_secret_refresh_jwt_key',
+      });
+
+      const user = await this.userRepository.findUniqueById(payload.sub as number);
+      if (!user || !user.isActive) {
+        throw new UnauthorizedException('Phiên làm việc không hợp lệ');
+      }
+
+      const newPayload = { sub: user.id, email: user.email };
+      const accessToken = await this.jwtService.signAsync(newPayload, {
+        secret:
+          this.configService.get<string>('JWT_SECRET') || 'super_secret_jwt_key',
+        expiresIn: (this.configService.get<string>('JWT_EXPIRES_IN') || '15m') as any,
+      });
+
+      return { accessToken };
+    } catch {
+      throw new UnauthorizedException(
+        'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.',
+      );
+    }
+  }
+
+  async updateProfile(userId: number, dto: UpdateProfileDto) {
+    const user = await this.userRepository.findUniqueById(userId);
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    const updatedUser = await this.userRepository.update(userId, {
+      fullName: dto.fullName !== undefined ? dto.fullName : undefined,
+      phone: dto.phone !== undefined ? dto.phone : undefined,
+      birthDate:
+        dto.birthDate !== undefined
+          ? dto.birthDate
+            ? new Date(dto.birthDate)
+            : null
+          : undefined,
+      gender: dto.gender !== undefined ? dto.gender : undefined,
+      position: dto.position !== undefined ? dto.position : undefined,
+      provinceId: dto.provinceId !== undefined ? dto.provinceId : undefined,
+      wardId: dto.wardId !== undefined ? dto.wardId : undefined,
+      address: dto.address !== undefined ? dto.address : undefined,
+      avatarUrl: dto.avatarUrl !== undefined ? dto.avatarUrl : undefined,
+    });
+
+    return {
+      message: 'Cập nhật thông tin người dùng thành công',
+      user: this.formatUserResponse(updatedUser),
+    };
+  }
+
+  async requestEmailChange(userId: number) {
+    const user = await this.userRepository.findUniqueById(userId);
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    const email = user.email;
+    if (!email) {
+      throw new BadRequestException('Tài khoản không có email');
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+
+    await this.emailChangeOtpRepository.upsertOtp(userId, email, otp, expiresAt);
+
+    // Send email change OTP code
+    this.mailService
+      .sendEmailChangeOtpEmail(email, user.fullName || user.username, otp)
+      .catch(() => {});
+
+    console.log(
+      `\n🔑 [DEV ONLY] Mã OTP thay đổi email của ${email} là: ${otp}\n`,
+    );
+
+    return { message: 'Gửi email thành công' };
+  }
+
+  async verifyEmailChange(userId: number, dto: VerifyEmailChangeDto) {
+    const user = await this.userRepository.findUniqueById(userId);
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    const record = await this.emailChangeOtpRepository.findByUserId(userId);
+
+    if (!record || record.otp !== dto.otp || new Date() > record.expiresAt) {
+      throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
+    }
+
+    // Generate verified token
+    const verificationToken = await this.jwtService.signAsync(
+      { sub: userId, type: 'email-change-verified', email: user.email },
+      {
+        secret:
+          this.configService.get<string>('JWT_SECRET') || 'super_secret_jwt_key',
+        expiresIn: '10m',
+      },
+    );
+
+    await this.emailChangeOtpRepository.deleteByUserId(userId);
+
+    return {
+      message: 'Xác thực OTP thành công',
+      verificationToken,
+    };
+  }
+
+  async updateEmail(userId: number, dto: UpdateEmailDto) {
+    try {
+      const payload = await this.jwtService.verifyAsync(dto.verificationToken!, {
+        secret:
+          this.configService.get<string>('JWT_SECRET') || 'super_secret_jwt_key',
+      });
+
+      if (payload.sub !== userId || payload.type !== 'email-change-verified') {
+        throw new BadRequestException('Token xác thực không hợp lệ');
+      }
+
+      const newEmail = dto.newEmail!.toLowerCase();
+
+      // Verify email is not already taken
+      const existingUser = await this.userRepository.findUniqueByEmail(newEmail);
+      if (existingUser && existingUser.id !== userId) {
+        throw new ConflictException('Email này đã được sử dụng trong hệ thống');
+      }
+
+      const updatedUser = await this.userRepository.update(userId, {
+        email: newEmail,
+      });
+
+      return {
+        message: 'Thay đổi email thành công',
+        user: this.formatUserResponse(updatedUser),
+      };
+    } catch (e: any) {
+      if (e instanceof ConflictException || e instanceof BadRequestException) {
+        throw e;
+      }
+      throw new BadRequestException('Token xác thực không hợp lệ hoặc đã hết hạn');
+    }
+  }
+
+  async changePassword(userId: number, dto: ChangePasswordDto) {
+    const user = await this.userRepository.findUniqueById(userId);
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      dto.currentPassword!,
+      user.passwordHash,
+    );
+
+    if (!isPasswordValid) {
+      throw new BadRequestException('Mật khẩu hiện tại không đúng');
+    }
+
+    if (dto.newPassword !== dto.confirmNewPassword) {
+      throw new BadRequestException('Mật khẩu xác nhận không khớp');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(dto.newPassword!, salt);
+
+    await this.userRepository.update(userId, {
+      passwordHash: hashedPassword,
+    });
+
+    return { message: 'Đổi mật khẩu thành công' };
+  }
+}
