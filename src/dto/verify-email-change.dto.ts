@@ -3,6 +3,7 @@ import { IsNotEmpty, Length } from 'class-validator';
 
 export class VerifyEmailChangeDto {
   @ApiProperty({
+    type: String,
     example: '123456',
     description: 'Mã xác thực OTP gồm 6 chữ số',
   })
