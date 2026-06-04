@@ -214,53 +214,53 @@ async function main() {
   // ==================================================
   const categoryData = [
     // OCCUPATION
-    { type: 'OCCUPATION' as const, code: 'WORKER', name: 'Công nhân' },
-    { type: 'OCCUPATION' as const, code: 'ENGINEER', name: 'Kỹ sư' },
-    { type: 'OCCUPATION' as const, code: 'TECHNICIAN', name: 'Kỹ thuật viên' },
-    { type: 'OCCUPATION' as const, code: 'SUPERVISOR_OCC', name: 'Giám sát' },
-    { type: 'OCCUPATION' as const, code: 'DRIVER', name: 'Lái xe' },
-    { type: 'OCCUPATION' as const, code: 'ELECTRICIAN', name: 'Thợ điện' },
-    { type: 'OCCUPATION' as const, code: 'WELDER', name: 'Thợ hàn' },
-    { type: 'OCCUPATION' as const, code: 'CARPENTER', name: 'Thợ mộc' },
-    { type: 'OCCUPATION' as const, code: 'MASON', name: 'Thợ xây' },
-    { type: 'OCCUPATION' as const, code: 'CRANE_OPERATOR', name: 'Thợ vận hành cẩu' },
+    { type: 'OCCUPATION', code: 'WORKER', name: 'Công nhân' },
+    { type: 'OCCUPATION', code: 'ENGINEER', name: 'Kỹ sư' },
+    { type: 'OCCUPATION', code: 'TECHNICIAN', name: 'Kỹ thuật viên' },
+    { type: 'OCCUPATION', code: 'SUPERVISOR_OCC', name: 'Giám sát' },
+    { type: 'OCCUPATION', code: 'DRIVER', name: 'Lái xe' },
+    { type: 'OCCUPATION', code: 'ELECTRICIAN', name: 'Thợ điện' },
+    { type: 'OCCUPATION', code: 'WELDER', name: 'Thợ hàn' },
+    { type: 'OCCUPATION', code: 'CARPENTER', name: 'Thợ mộc' },
+    { type: 'OCCUPATION', code: 'MASON', name: 'Thợ xây' },
+    { type: 'OCCUPATION', code: 'CRANE_OPERATOR', name: 'Thợ vận hành cẩu' },
 
     // INJURY_FACTOR
-    { type: 'INJURY_FACTOR' as const, code: 'MACHINE', name: 'Máy móc, thiết bị' },
-    { type: 'INJURY_FACTOR' as const, code: 'FALL_HEIGHT', name: 'Ngã từ trên cao' },
-    { type: 'INJURY_FACTOR' as const, code: 'ELECTRIC_SHOCK', name: 'Điện giật' },
-    { type: 'INJURY_FACTOR' as const, code: 'CHEMICAL', name: 'Hóa chất' },
-    { type: 'INJURY_FACTOR' as const, code: 'FIRE_EXPLOSION', name: 'Cháy nổ' },
-    { type: 'INJURY_FACTOR' as const, code: 'HEAVY_OBJECT', name: 'Vật nặng đè' },
-    { type: 'INJURY_FACTOR' as const, code: 'VEHICLE', name: 'Phương tiện giao thông' },
-    { type: 'INJURY_FACTOR' as const, code: 'COLLAPSE', name: 'Sập đổ công trình' },
-    { type: 'INJURY_FACTOR' as const, code: 'HOT_SURFACE', name: 'Bề mặt nóng / bỏng' },
-    { type: 'INJURY_FACTOR' as const, code: 'SHARP_OBJECT', name: 'Vật sắc nhọn' },
+    { type: 'INJURY_FACTOR', code: 'MACHINE', name: 'Máy móc, thiết bị' },
+    { type: 'INJURY_FACTOR', code: 'FALL_HEIGHT', name: 'Ngã từ trên cao' },
+    { type: 'INJURY_FACTOR', code: 'ELECTRIC_SHOCK', name: 'Điện giật' },
+    { type: 'INJURY_FACTOR', code: 'CHEMICAL', name: 'Hóa chất' },
+    { type: 'INJURY_FACTOR', code: 'FIRE_EXPLOSION', name: 'Cháy nổ' },
+    { type: 'INJURY_FACTOR', code: 'HEAVY_OBJECT', name: 'Vật nặng đè' },
+    { type: 'INJURY_FACTOR', code: 'VEHICLE', name: 'Phương tiện giao thông' },
+    { type: 'INJURY_FACTOR', code: 'COLLAPSE', name: 'Sập đổ công trình' },
+    { type: 'INJURY_FACTOR', code: 'HOT_SURFACE', name: 'Bề mặt nóng / bỏng' },
+    { type: 'INJURY_FACTOR', code: 'SHARP_OBJECT', name: 'Vật sắc nhọn' },
 
     // ACCIDENT_CAUSE
-    { type: 'ACCIDENT_CAUSE' as const, code: 'UNSAFE_BEHAVIOR', name: 'Hành vi không an toàn' },
-    { type: 'ACCIDENT_CAUSE' as const, code: 'NO_PPE', name: 'Không sử dụng BHLĐ' },
-    { type: 'ACCIDENT_CAUSE' as const, code: 'UNSAFE_CONDITION', name: 'Điều kiện không an toàn' },
-    { type: 'ACCIDENT_CAUSE' as const, code: 'POOR_TRAINING', name: 'Thiếu đào tạo an toàn' },
-    { type: 'ACCIDENT_CAUSE' as const, code: 'FATIGUE', name: 'Mệt mỏi, mất tập trung' },
-    { type: 'ACCIDENT_CAUSE' as const, code: 'EQUIPMENT_FAILURE', name: 'Hư hỏng thiết bị' },
-    { type: 'ACCIDENT_CAUSE' as const, code: 'BAD_WEATHER', name: 'Thời tiết xấu' },
-    { type: 'ACCIDENT_CAUSE' as const, code: 'OVERLOAD', name: 'Quá tải công việc' },
-    { type: 'ACCIDENT_CAUSE' as const, code: 'PROCEDURE_VIOLATION', name: 'Vi phạm quy trình' },
-    { type: 'ACCIDENT_CAUSE' as const, code: 'POOR_SUPERVISION', name: 'Giám sát không đầy đủ' },
+    { type: 'ACCIDENT_CAUSE', code: 'UNSAFE_BEHAVIOR', name: 'Hành vi không an toàn' },
+    { type: 'ACCIDENT_CAUSE', code: 'NO_PPE', name: 'Không sử dụng BHLĐ' },
+    { type: 'ACCIDENT_CAUSE', code: 'UNSAFE_CONDITION', name: 'Điều kiện không an toàn' },
+    { type: 'ACCIDENT_CAUSE', code: 'POOR_TRAINING', name: 'Thiếu đào tạo an toàn' },
+    { type: 'ACCIDENT_CAUSE', code: 'FATIGUE', name: 'Mệt mỏi, mất tập trung' },
+    { type: 'ACCIDENT_CAUSE', code: 'EQUIPMENT_FAILURE', name: 'Hư hỏng thiết bị' },
+    { type: 'ACCIDENT_CAUSE', code: 'BAD_WEATHER', name: 'Thời tiết xấu' },
+    { type: 'ACCIDENT_CAUSE', code: 'OVERLOAD', name: 'Quá tải công việc' },
+    { type: 'ACCIDENT_CAUSE', code: 'PROCEDURE_VIOLATION', name: 'Vi phạm quy trình' },
+    { type: 'ACCIDENT_CAUSE', code: 'POOR_SUPERVISION', name: 'Giám sát không đầy đủ' },
 
     // INJURY_TYPE
-    { type: 'INJURY_TYPE' as const, code: 'DEATH', name: 'Tử vong' },
-    { type: 'INJURY_TYPE' as const, code: 'SEVERE', name: 'Thương tích nặng' },
-    { type: 'INJURY_TYPE' as const, code: 'MODERATE', name: 'Thương tích trung bình' },
-    { type: 'INJURY_TYPE' as const, code: 'MINOR', name: 'Thương tích nhẹ' },
-    { type: 'INJURY_TYPE' as const, code: 'FRACTURE', name: 'Gãy xương' },
-    { type: 'INJURY_TYPE' as const, code: 'BURN', name: 'Bỏng' },
-    { type: 'INJURY_TYPE' as const, code: 'AMPUTATION', name: 'Cụt chi' },
-    { type: 'INJURY_TYPE' as const, code: 'POISONING', name: 'Ngộ độc' },
-    { type: 'INJURY_TYPE' as const, code: 'CONCUSSION', name: 'Chấn thương đầu' },
-    { type: 'INJURY_TYPE' as const, code: 'SPRAIN', name: 'Bong gân / trật khớp' },
-  ];
+    { type: 'INJURY_TYPE', code: 'DEATH', name: 'Tử vong' },
+    { type: 'INJURY_TYPE', code: 'SEVERE', name: 'Thương tích nặng' },
+    { type: 'INJURY_TYPE', code: 'MODERATE', name: 'Thương tích trung bình' },
+    { type: 'INJURY_TYPE', code: 'MINOR', name: 'Thương tích nhẹ' },
+    { type: 'INJURY_TYPE', code: 'FRACTURE', name: 'Gãy xương' },
+    { type: 'INJURY_TYPE', code: 'BURN', name: 'Bỏng' },
+    { type: 'INJURY_TYPE', code: 'AMPUTATION', name: 'Cụt chi' },
+    { type: 'INJURY_TYPE', code: 'POISONING', name: 'Ngộ độc' },
+    { type: 'INJURY_TYPE', code: 'CONCUSSION', name: 'Chấn thương đầu' },
+    { type: 'INJURY_TYPE', code: 'SPRAIN', name: 'Bong gân / trật khớp' },
+  ] as const;
 
   const categories = await Promise.all(
     categoryData.map((c) =>
@@ -503,16 +503,19 @@ async function main() {
 
   const latestPeriod = reportPeriods[reportPeriods.length - 1]; // 2025 YEAR
 
-  const reportsData = approvedEnterprises.slice(0, 10).map((ent, i) => ({
-    enterpriseId: ent.id,
-    reportPeriodId: latestPeriod.id,
-    createdBy: enterpriseUsers[i]?.id ?? enterpriseUsers[0].id,
-    status: (i % 3 === 0 ? 'DRAFT' : i % 3 === 1 ? 'SUBMITTED' : 'APPROVED') as const,
-    companyEmployeeTotal: 50 + i * 30,
-    femaleEmployeeTotal: 20 + i * 10,
-    salaryFund: 200000000 + i * 50000000,
-    submittedAt: i % 3 !== 0 ? new Date() : undefined,
-  }));
+  const reportsData = approvedEnterprises.slice(0, 10).map((ent, i) => {
+    const status = (i % 3 === 0 ? 'DRAFT' : i % 3 === 1 ? 'SUBMITTED' : 'APPROVED') as any;
+    return {
+      enterpriseId: ent.id,
+      reportPeriodId: latestPeriod.id,
+      createdBy: enterpriseUsers[i]?.id ?? enterpriseUsers[0].id,
+      status,
+      companyEmployeeTotal: 50 + i * 30,
+      femaleEmployeeTotal: 20 + i * 10,
+      salaryFund: 200000000 + i * 50000000,
+      submittedAt: i % 3 !== 0 ? new Date() : undefined,
+    };
+  });
 
   // Use createMany with skipDuplicates; fall back to upsert per record to handle unique constraint
   const reports: { id: number; enterpriseId: number }[] = [];

@@ -50,9 +50,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       result.birthDate = result.birthDate.toISOString().split('T')[0];
     }
     if (result.enterpriseProfile?.licenseIssueDate instanceof Date) {
-      result.enterpriseProfile.licenseIssueDate = result.enterpriseProfile.licenseIssueDate
-        .toISOString()
-        .split('T')[0];
+      result.enterpriseProfile.licenseIssueDate =
+        result.enterpriseProfile.licenseIssueDate.toISOString().split('T')[0];
     }
     return result;
   }
