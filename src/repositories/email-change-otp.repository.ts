@@ -12,7 +12,12 @@ export class EmailChangeOtpRepository {
     });
   }
 
-  async upsertOtp(userId: number, newEmail: string, otp: string, expiresAt: Date) {
+  async upsertOtp(
+    userId: number,
+    newEmail: string,
+    otp: string,
+    expiresAt: Date,
+  ) {
     // Delete any previous OTPs for this user first
     await this.prisma.emailChangeOtp.deleteMany({ where: { userId } });
 

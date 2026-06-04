@@ -12,7 +12,8 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dto/login.dto';
-
+import { ForgotPasswordDto } from '../dto/forgot-password.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
@@ -104,5 +105,42 @@ export class AuthController {
       sameSite: 'lax',
     });
     return { message: 'Đăng xuất thành công' };
+  }
+
+  ////////// forgot password & reset password //////////
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Yêu cầu gửi mã OTP khôi phục mật khẩu qua email' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Gửi email thành công và tạo OTP thành công.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Email chưa được đăng ký. Xin vui lòng thử lại.',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Định dạng email gửi lên không hợp lệ.',
+  })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Xác thực OTP và đặt lại mật khẩu mới cho tài khoản',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Khôi phục mật khẩu thành công.',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'OTP không hợp lệ/hết hạn hoặc mật khẩu xác nhận không khớp.',
+  })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }

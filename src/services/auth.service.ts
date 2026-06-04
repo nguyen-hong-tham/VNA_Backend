@@ -18,7 +18,8 @@ import { VerifyEmailChangeDto } from '../dto/verify-email-change.dto';
 import { UpdateEmailDto } from '../dto/update-email.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { PrismaService } from '../repositories/prisma.service';
-
+import { ForgotPasswordDto } from '../dto/forgot-password.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -38,9 +39,8 @@ export class AuthService {
       result.birthDate = result.birthDate.toISOString().split('T')[0];
     }
     if (result.enterpriseProfile?.licenseIssueDate instanceof Date) {
-      result.enterpriseProfile.licenseIssueDate = result.enterpriseProfile.licenseIssueDate
-        .toISOString()
-        .split('T')[0];
+      result.enterpriseProfile.licenseIssueDate =
+        result.enterpriseProfile.licenseIssueDate.toISOString().split('T')[0];
     }
     return result;
   }
@@ -59,7 +59,10 @@ export class AuthService {
       throw new UnauthorizedException('Tài khoản của bạn đã bị khóa');
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password!, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      dto.password!,
+      user.passwordHash,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException(
         'Tài khoản hoặc mật khẩu không đúng. Xin vui lòng thử lại',
@@ -72,7 +75,8 @@ export class AuthService {
     const accessToken = await this.jwtService.signAsync(payload, {
       secret:
         this.configService.get<string>('JWT_SECRET') || 'super_secret_jwt_key',
-      expiresIn: (this.configService.get<string>('JWT_EXPIRES_IN') || '15m') as any,
+      expiresIn: (this.configService.get<string>('JWT_EXPIRES_IN') ||
+        '15m') as any,
     });
 
     // Generate Refresh Token
@@ -80,7 +84,8 @@ export class AuthService {
       secret:
         this.configService.get<string>('JWT_REFRESH_SECRET') ||
         'super_secret_refresh_jwt_key',
-      expiresIn: (this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') || '7d') as any,
+      expiresIn: (this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') ||
+        '7d') as any,
     });
 
     return {
@@ -99,7 +104,9 @@ export class AuthService {
           'super_secret_refresh_jwt_key',
       });
 
-      const user = await this.userRepository.findUniqueById(payload.sub as number);
+      const user = await this.userRepository.findUniqueById(
+        payload.sub as number,
+      );
       if (!user || !user.isActive) {
         throw new UnauthorizedException('Phiên làm việc không hợp lệ');
       }
@@ -107,8 +114,10 @@ export class AuthService {
       const newPayload = { sub: user.id, email: user.email };
       const accessToken = await this.jwtService.signAsync(newPayload, {
         secret:
-          this.configService.get<string>('JWT_SECRET') || 'super_secret_jwt_key',
-        expiresIn: (this.configService.get<string>('JWT_EXPIRES_IN') || '15m') as any,
+          this.configService.get<string>('JWT_SECRET') ||
+          'super_secret_jwt_key',
+        expiresIn: (this.configService.get<string>('JWT_EXPIRES_IN') ||
+          '15m') as any,
       });
 
       return { accessToken };
@@ -164,7 +173,12 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 5);
 
-    await this.emailChangeOtpRepository.upsertOtp(userId, email, otp, expiresAt);
+    await this.emailChangeOtpRepository.upsertOtp(
+      userId,
+      email,
+      otp,
+      expiresAt,
+    );
 
     // Send email change OTP code
     this.mailService
@@ -195,7 +209,8 @@ export class AuthService {
       { sub: userId, type: 'email-change-verified', email: user.email },
       {
         secret:
-          this.configService.get<string>('JWT_SECRET') || 'super_secret_jwt_key',
+          this.configService.get<string>('JWT_SECRET') ||
+          'super_secret_jwt_key',
         expiresIn: '10m',
       },
     );
@@ -210,10 +225,14 @@ export class AuthService {
 
   async updateEmail(userId: number, dto: UpdateEmailDto) {
     try {
-      const payload = await this.jwtService.verifyAsync(dto.verificationToken!, {
-        secret:
-          this.configService.get<string>('JWT_SECRET') || 'super_secret_jwt_key',
-      });
+      const payload = await this.jwtService.verifyAsync(
+        dto.verificationToken!,
+        {
+          secret:
+            this.configService.get<string>('JWT_SECRET') ||
+            'super_secret_jwt_key',
+        },
+      );
 
       if (payload.sub !== userId || payload.type !== 'email-change-verified') {
         throw new BadRequestException('Token xác thực không hợp lệ');
@@ -222,7 +241,8 @@ export class AuthService {
       const newEmail = dto.newEmail!.toLowerCase();
 
       // Verify email is not already taken
-      const existingUser = await this.userRepository.findUniqueByEmail(newEmail);
+      const existingUser =
+        await this.userRepository.findUniqueByEmail(newEmail);
       if (existingUser && existingUser.id !== userId) {
         throw new ConflictException('Email này đã được sử dụng trong hệ thống');
       }
@@ -239,7 +259,9 @@ export class AuthService {
       if (e instanceof ConflictException || e instanceof BadRequestException) {
         throw e;
       }
-      throw new BadRequestException('Token xác thực không hợp lệ hoặc đã hết hạn');
+      throw new BadRequestException(
+        'Token xác thực không hợp lệ hoặc đã hết hạn',
+      );
     }
   }
 
@@ -270,5 +292,83 @@ export class AuthService {
     });
 
     return { message: 'Đổi mật khẩu thành công' };
+  }
+
+  //// Forgot Password
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const email = dto.email.toLowerCase().trim();
+
+    const user = await this.userRepository.findUniqueByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException(
+        'Email chưa được đăng ký. Xin vui lòng thử lại.',
+      );
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 5);
+
+    await this.passwordResetRepository.upsertOtp(user.id, otp, expiresAt);
+
+    await this.mailService
+      .sendPasswordResetOtpEmail(
+        email,
+        user.fullName || user.username,
+        user.username,
+        otp,
+      )
+      .catch(() => {});
+
+    console.log(
+      `\n🔑 [DEV ONLY] Mã OTP quên mật khẩu của ${email} là: ${otp}\n`,
+    );
+
+    return {
+      message: 'Gửi email thành công',
+    };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const email = dto.email.toLowerCase().trim();
+
+    const user = await this.userRepository.findUniqueByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException(
+        'Email chưa được đăng ký. Xin vui lòng thử lại.',
+      );
+    }
+
+    const record = await this.passwordResetRepository.findByUserId(user.id);
+
+    if (!record || record.otp !== dto.otp) {
+      throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
+    }
+
+    if (new Date() > record.expiresAt) {
+      throw new BadRequestException('Mã OTP không hợp lệ hoặc đã hết hạn');
+    }
+
+    if (dto.newPassword !== dto.confirmNewPassword) {
+      throw new BadRequestException('Mật khẩu xác nhận không khớp');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+
+    const hashedPassword = await bcrypt.hash(dto.newPassword, salt);
+
+    await this.userRepository.update(user.id, {
+      passwordHash: hashedPassword,
+    });
+
+    await this.passwordResetRepository.deleteByUserId(user.id);
+
+    return {
+      message: 'Khôi phục mật khẩu thành công',
+    };
   }
 }

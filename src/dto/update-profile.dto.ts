@@ -1,10 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsDateString,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsDateString, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateProfileDto {
   @ApiProperty({ example: 'Nguyễn Văn A', required: false })
@@ -32,7 +27,11 @@ export class UpdateProfileDto {
   @IsString({ message: 'Chức vụ phải là chuỗi ký tự' })
   position?: string;
 
-  @ApiProperty({ example: 1, required: false, description: 'ID tỉnh/thành phố' })
+  @ApiProperty({
+    example: 1,
+    required: false,
+    description: 'ID tỉnh/thành phố',
+  })
   @IsOptional()
   @IsNumber()
   provinceId?: number;

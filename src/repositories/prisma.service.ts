@@ -33,7 +33,9 @@ export class PrismaService
         where: { username: deptUsername },
       });
       if (!existingDept) {
-        const adminRole = await this.role.findUnique({ where: { code: 'ADMIN' } });
+        const adminRole = await this.role.findUnique({
+          where: { code: 'ADMIN' },
+        });
         if (adminRole) {
           const argon2 = await import('argon2');
           const hashedPassword = await argon2.hash('password123');
@@ -47,7 +49,9 @@ export class PrismaService
               isActive: true,
             },
           });
-          console.log('✅ Seeded default Department user: so_laodong / password123');
+          console.log(
+            '✅ Seeded default Department user: so_laodong / password123',
+          );
         }
       }
 
