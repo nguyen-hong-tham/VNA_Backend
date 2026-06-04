@@ -33,21 +33,25 @@ export class AuthController {
   ) {
     const result = await this.authService.login(dto);
 
-    // Set Access Token HTTP-Only Cookie (expires in 15 mins)
-    response.cookie('access_token', result.accessToken, {
+    const cookieOptions: any = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 15 * 60 * 1000,
-    });
+    };
 
-    // Set Refresh Token HTTP-Only Cookie (expires in 7 days)
-    response.cookie('refresh_token', result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    const accessCookieOptions = { ...cookieOptions };
+    const refreshCookieOptions = { ...cookieOptions };
+
+    if (dto.rememberMe) {
+      accessCookieOptions.maxAge = 15 * 60 * 1000; // 15 mins
+      refreshCookieOptions.maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+    }
+
+    // Set Access Token HTTP-Only Cookie
+    response.cookie('access_token', result.accessToken, accessCookieOptions);
+
+    // Set Refresh Token HTTP-Only Cookie
+    response.cookie('refresh_token', result.refreshToken, refreshCookieOptions);
 
     return {
       message: result.message,
