@@ -6,13 +6,21 @@ import {
   Put,
   Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
 import { AuthService } from '../services/auth.service';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
@@ -57,6 +65,52 @@ export class UserController {
     @Body() dto: UpdateProfileDto,
   ) {
     return this.authService.updateProfile(req.user.id, dto);
+  }
+
+  @Post('avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Tải lên và cập nhật ảnh đại diện (avatar) qua Supabase Storage' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'File ảnh đại diện (png, jpeg, jpg, gif, webp; tối đa 2MB)',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Cập nhật ảnh đại diện thành công',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'File tải lên không hợp lệ (không phải ảnh hoặc vượt quá 2MB)',
+  })
+  async uploadAvatar(
+    @Req() req: AuthenticatedRequest,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 2 * 1024 * 1024,
+            message: 'Dung lượng file không được vượt quá 2MB',
+          }),
+          new FileTypeValidator({
+            fileType: /image\/(jpeg|png|jpg|gif|webp)/,
+          }),
+        ],
+        fileIsRequired: true,
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    return this.authService.updateAvatar(req.user.id, file);
   }
 
   @Post('email-change/request')

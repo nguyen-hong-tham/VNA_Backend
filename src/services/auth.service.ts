@@ -20,6 +20,7 @@ import { ChangePasswordDto } from '../dto/change-password.dto';
 import { PrismaService } from '../repositories/prisma.service';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
+import { SupabaseService } from './supabase.service';
 @Injectable()
 export class AuthService {
   constructor(
@@ -30,6 +31,7 @@ export class AuthService {
     private configService: ConfigService,
     private mailService: MailService,
     private prisma: PrismaService,
+    private supabaseService: SupabaseService,
   ) {}
 
   private formatUserResponse(user: any) {
@@ -154,6 +156,25 @@ export class AuthService {
     return {
       message: 'Cập nhật thông tin người dùng thành công',
       user: this.formatUserResponse(updatedUser),
+    };
+  }
+
+  async updateAvatar(userId: number, file: Express.Multer.File) {
+    const user = await this.userRepository.findUniqueById(userId);
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+
+    const avatarUrl = await this.supabaseService.uploadAvatar(file);
+
+    const updatedUser = await this.userRepository.update(userId, {
+      avatarUrl,
+    });
+
+    return {
+      message: 'Cập nhật ảnh đại diện thành công',
+      user: this.formatUserResponse(updatedUser),
+      avatarUrl,
     };
   }
 

@@ -10,6 +10,7 @@ import { UserController } from './controllers/user.controller';
 // Services
 import { AuthService } from './services/auth.service';
 import { MailService } from './services/mail.service';
+import { SupabaseService } from './services/supabase.service';
 
 // Repositories
 import { PrismaService } from './repositories/prisma.service';
@@ -32,6 +33,7 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
   providers: [
     AuthService,
     MailService,
+    SupabaseService,
     PrismaService,
     UserRepository,
     PasswordResetRepository,
