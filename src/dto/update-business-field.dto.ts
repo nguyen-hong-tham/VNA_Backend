@@ -2,14 +2,14 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsOptional, IsString } from 'class-validator';
 import { Transform } from 'class-transformer';
 
-export class UpdateBusinessTypeDto {
+export class UpdateBusinessFieldDto {
   @ApiProperty({
-    example: 'Công ty Cổ phần',
-    description: 'Tên loại hình kinh doanh',
+    example: 'Nông nghiệp và hoạt động dịch vụ có liên quan',
+    description: 'Tên ngành nghề kinh doanh',
     required: false,
   })
   @IsOptional()
-  @IsString({ message: 'Tên loại hình phải là chuỗi ký tự' })
+  @IsString({ message: 'Tên ngành phải là chuỗi ký tự' })
   name?: string;
 
   @ApiProperty({
