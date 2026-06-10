@@ -136,6 +136,16 @@ export class AuthService {
       throw new NotFoundException('Không tìm thấy người dùng');
     }
 
+    if (dto.birthDate) {
+      const birthDateObj = new Date(dto.birthDate);
+      const today = new Date();
+      // Đặt giờ cuối ngày để tránh lệch múi giờ trong ngày hiện tại
+      today.setHours(23, 59, 59, 999);
+      if (birthDateObj > today) {
+        throw new BadRequestException('Ngày sinh không được vượt quá ngày hiện tại');
+      }
+    }
+
     const updatedUser = await this.userRepository.update(userId, {
       fullName: dto.fullName !== undefined ? dto.fullName : undefined,
       phone: dto.phone !== undefined ? dto.phone : undefined,
@@ -259,17 +269,58 @@ export class AuthService {
         throw new BadRequestException('Token xác thực không hợp lệ');
       }
 
-      const newEmail = dto.newEmail!.toLowerCase();
+      const newEmail = dto.newEmail!.toLowerCase().trim();
 
-      // Verify email is not already taken
-      const existingUser =
-        await this.userRepository.findUniqueByEmail(newEmail);
-      if (existingUser && existingUser.id !== userId) {
-        throw new ConflictException('Email này đã được sử dụng trong hệ thống');
+      // Get current user to see current email and if they have a linked enterpriseProfile
+      const user = await this.userRepository.findUniqueById(userId);
+      if (!user) {
+        throw new NotFoundException('Không tìm thấy người dùng');
       }
 
-      const updatedUser = await this.userRepository.update(userId, {
-        email: newEmail,
+      // 1. Kiểm tra trùng với email hiện tại
+      if (user.email && user.email.toLowerCase() === newEmail) {
+        throw new BadRequestException('Email mới phải khác địa chỉ email hiện tại của bạn');
+      }
+
+      // 2. Kiểm tra trùng email trong bảng User (loại trừ chính mình)
+      const existingUser = await this.prisma.user.findFirst({
+        where: {
+          email: { equals: newEmail, mode: 'insensitive' },
+          id: { not: userId },
+        },
+      });
+      if (existingUser) {
+        throw new ConflictException('Email này đã được sử dụng bởi một tài khoản khác trong hệ thống');
+      }
+
+      // 3. Kiểm tra trùng email trong bảng Enterprise (loại trừ hồ sơ của chính user hiện tại)
+      const enterpriseIdToExclude = user.enterpriseProfile?.id;
+      const existingEnterprise = await this.prisma.enterprise.findFirst({
+        where: {
+          email: { equals: newEmail, mode: 'insensitive' },
+          ...(enterpriseIdToExclude ? { id: { not: enterpriseIdToExclude } } : {}),
+        },
+      });
+      if (existingEnterprise) {
+        throw new ConflictException('Email này đã được sử dụng bởi một doanh nghiệp khác trong hệ thống');
+      }
+
+      // Cập nhật đồng bộ email của User và cả Enterprise liên kết nếu có
+      const updatedUser = await this.prisma.$transaction(async (tx) => {
+        const updated = await tx.user.update({
+          where: { id: userId },
+          data: { email: newEmail },
+          include: { role: true, enterpriseProfile: true },
+        });
+
+        if (user.enterpriseProfile) {
+          await tx.enterprise.update({
+            where: { id: user.enterpriseProfile.id },
+            data: { email: newEmail },
+          });
+        }
+
+        return updated;
       });
 
       return {
@@ -277,7 +328,11 @@ export class AuthService {
         user: this.formatUserResponse(updatedUser),
       };
     } catch (e: any) {
-      if (e instanceof ConflictException || e instanceof BadRequestException) {
+      if (
+        e instanceof ConflictException ||
+        e instanceof BadRequestException ||
+        e instanceof NotFoundException
+      ) {
         throw e;
       }
       throw new BadRequestException(
