@@ -48,6 +48,15 @@ export class EnterpriseService {
   }
 
   async create(dto: CreateEnterpriseDto) {
+    if (dto.licenseIssueDate) {
+      const issueDate = new Date(dto.licenseIssueDate);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (issueDate > today) {
+        throw new BadRequestException('Ngày cấp giấy phép kinh doanh không được là ngày tương lai');
+      }
+    }
+
     // 1. Kiểm tra duy nhất mã số thuế
     const taxCode = dto.taxCode.trim();
     const existingEnt = await this.enterpriseRepo.findByTaxCode(taxCode);
@@ -168,6 +177,15 @@ export class EnterpriseService {
   }
 
   async update(id: number, dto: UpdateEnterpriseDto) {
+    if (dto.licenseIssueDate) {
+      const issueDate = new Date(dto.licenseIssueDate);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      if (issueDate > today) {
+        throw new BadRequestException('Ngày cấp giấy phép kinh doanh không được là ngày tương lai');
+      }
+    }
+
     const existing = await this.enterpriseRepo.findById(id);
     if (!existing) {
       throw new NotFoundException('Không tìm thấy thông tin doanh nghiệp');
@@ -279,10 +297,6 @@ export class EnterpriseService {
   }
 
   async changePassword(dto: ChangeEnterprisePasswordDto) {
-    if (dto.newPassword !== dto.confirmPassword) {
-      throw new BadRequestException('Mật khẩu mới và xác nhận mật khẩu không khớp nhau');
-    }
-
     const user = await this.userRepo.findUniqueByUsername(dto.username.trim());
     if (!user) {
       throw new NotFoundException('Không tìm thấy tài khoản doanh nghiệp này');
@@ -557,6 +571,15 @@ export class EnterpriseService {
           }
         }
 
+        if (licenseIssueDate) {
+          const today = new Date();
+          today.setHours(23, 59, 59, 999);
+          if (licenseIssueDate > today) {
+            errors.push(`Dòng ${rowIndex}: Ngày cấp giấy phép kinh doanh không được là ngày tương lai.`);
+            continue;
+          }
+        }
+
         // Province & Ward
         const provinceId = provinceKey
           ? parseInt(String(row[provinceKey] || '0').replace(/\D/g, ''), 10) || 79
@@ -622,5 +645,13 @@ export class EnterpriseService {
       }
       throw new BadRequestException(`Lỗi khi xử lý file Excel: ${e.message}`);
     }
+  }
+
+  async delete(id: number) {
+    const existing = await this.enterpriseRepo.findById(id);
+    if (!existing) {
+      throw new NotFoundException('Không tìm thấy thông tin doanh nghiệp');
+    }
+    return this.enterpriseRepo.delete(id);
   }
 }

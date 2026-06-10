@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Delete,
   Query,
   UseGuards,
   UseInterceptors,
@@ -128,5 +129,17 @@ export class BusinessTypeController {
     file: Express.Multer.File,
   ) {
     return this.businessTypeService.importFromFile(file);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Xóa loại hình kinh doanh' })
+  @ApiResponse({ status: 200, description: 'Xóa thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy loại hình kinh doanh' })
+  @ApiResponse({
+    status: 400,
+    description: 'Không thể xóa loại hình kinh doanh này vì đang có doanh nghiệp tham chiếu đến',
+  })
+  async delete(@Param('id', ParseIntPipe) id: number) {
+    return this.businessTypeService.delete(id);
   }
 }

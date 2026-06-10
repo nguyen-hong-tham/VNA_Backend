@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Delete,
   Query,
   UseGuards,
   UseInterceptors,
@@ -144,5 +145,18 @@ export class BusinessFieldController {
     file: Express.Multer.File,
   ) {
     return this.businessFieldService.importFromFile(file);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Xóa ngành nghề kinh doanh' })
+  @ApiResponse({ status: 200, description: 'Xóa thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy ngành nghề kinh doanh' })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Không thể xóa ngành nghề này vì đang có ngành nghề con hoặc doanh nghiệp tham chiếu đến',
+  })
+  async delete(@Param('id', ParseIntPipe) id: number) {
+    return this.businessFieldService.delete(id);
   }
 }

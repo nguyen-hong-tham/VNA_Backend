@@ -65,4 +65,17 @@ export class BusinessTypeRepository {
       create: { code, name, status },
     });
   }
+
+  async hasEnterprises(id: number): Promise<boolean> {
+    const count = await this.prisma.enterprise.count({
+      where: { businessTypeId: id },
+    });
+    return count > 0;
+  }
+
+  async delete(id: number) {
+    return this.prisma.businessType.delete({
+      where: { id },
+    });
+  }
 }

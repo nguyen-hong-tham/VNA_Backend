@@ -137,7 +137,22 @@ export class BusinessTypeService {
       if (e instanceof BadRequestException) {
         throw e;
       }
-      throw new BadRequestException(`Lỗi khi xử lý file Excel: ${e.message}`);
     }
+  }
+
+  async delete(id: number) {
+    const existing = await this.businessTypeRepo.findById(id);
+    if (!existing) {
+      throw new NotFoundException('Không tìm thấy loại hình kinh doanh');
+    }
+
+    const hasEnterprises = await this.businessTypeRepo.hasEnterprises(id);
+    if (hasEnterprises) {
+      throw new BadRequestException(
+        'Không thể xóa loại hình kinh doanh này vì đang có doanh nghiệp tham chiếu đến',
+      );
+    }
+
+    return this.businessTypeRepo.delete(id);
   }
 }

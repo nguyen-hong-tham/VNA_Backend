@@ -330,4 +330,27 @@ export class BusinessFieldService {
       throw new BadRequestException(`Lỗi khi xử lý file Excel: ${e.message}`);
     }
   }
+
+  async delete(id: number) {
+    const existing = await this.businessFieldRepo.findById(id);
+    if (!existing) {
+      throw new NotFoundException('Không tìm thấy ngành nghề kinh doanh');
+    }
+
+    const hasChildren = await this.businessFieldRepo.hasChildren(id);
+    if (hasChildren) {
+      throw new BadRequestException(
+        'Không thể xóa ngành nghề kinh doanh này vì đang có các ngành nghề con tham chiếu đến',
+      );
+    }
+
+    const hasEnterprises = await this.businessFieldRepo.hasEnterprises(id);
+    if (hasEnterprises) {
+      throw new BadRequestException(
+        'Không thể xóa ngành nghề kinh doanh này vì đang có doanh nghiệp tham chiếu đến',
+      );
+    }
+
+    return this.businessFieldRepo.delete(id);
+  }
 }

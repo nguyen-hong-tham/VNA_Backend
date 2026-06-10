@@ -18,12 +18,4 @@ export class ChangeEnterprisePasswordDto {
   @IsString({ message: 'Mật khẩu mới phải là chuỗi ký tự' })
   @MinLength(8, { message: 'Mật khẩu mới phải từ 8 ký tự trở lên' })
   newPassword: string;
-
-  @ApiProperty({
-    example: 'newpassword123',
-    description: 'Xác nhận lại mật khẩu mới',
-  })
-  @IsNotEmpty({ message: 'Xác nhận mật khẩu không được để trống' })
-  @IsString({ message: 'Xác nhận mật khẩu phải là chuỗi ký tự' })
-  confirmPassword: string;
 }

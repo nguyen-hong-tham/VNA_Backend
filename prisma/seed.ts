@@ -146,119 +146,178 @@ async function main() {
   }
 
   // ==================================================
-  // BUSINESS TYPES (10 records)
+  // BUSINESS TYPES (6 records matching database screenshot)
   // ==================================================
   const businessTypeData = [
-    { code: 'COMPANY', name: 'Công ty TNHH' },
-    { code: 'COOPERATIVE', name: 'Hợp tác xã' },
-    { code: 'JOINT_STOCK', name: 'Công ty cổ phần' },
-    { code: 'STATE_OWNED', name: 'Doanh nghiệp nhà nước' },
-    { code: 'PRIVATE', name: 'Doanh nghiệp tư nhân' },
-    { code: 'PARTNERSHIP', name: 'Công ty hợp danh' },
-    { code: 'FOREIGN', name: 'Doanh nghiệp có vốn nước ngoài' },
-    { code: 'HOUSEHOLD', name: 'Hộ kinh doanh' },
-    { code: 'ASSOCIATION', name: 'Liên hiệp hợp tác xã' },
-    { code: 'ONE_MEMBER', name: 'Công ty TNHH một thành viên' },
+    { code: '150', name: 'Doanh nghiệp tư nhân' },
+    { code: '120', name: 'Công ty TNHH 1 Thành viên' },
+    { code: '130', name: 'Công ty TNHH 2 Thành viên' },
+    { code: '140', name: 'Công ty hợp danh' },
+    { code: '110', name: 'Doanh nghiệp nhà nước' },
+    { code: '160', name: 'Công ty cổ phần' },
   ];
 
+  const businessTypeCodeToIdMap: Record<string, number> = {};
   const businessTypes = await Promise.all(
-    businessTypeData.map((bt) =>
-      prisma.businessType.upsert({
+    businessTypeData.map(async (bt) => {
+      const record = await prisma.businessType.upsert({
         where: { code: bt.code },
-        update: {},
+        update: { name: bt.name },
         create: bt,
-      }),
-    ),
+      });
+      businessTypeCodeToIdMap[bt.code] = record.id;
+      return record;
+    }),
   );
 
   // ==================================================
-  // BUSINESS FIELDS (10 records — 5 level-1, 5 level-2)
+  // BUSINESS FIELDS (seeding up to Level 4)
   // ==================================================
-  const manufacturing = await prisma.businessField.upsert({
-    where: { code: 'MANUFACTURING' },
-    update: {},
-    create: { code: 'MANUFACTURING', name: 'Sản xuất', level: 1 },
-  });
-  const construction = await prisma.businessField.upsert({
-    where: { code: 'CONSTRUCTION' },
-    update: {},
-    create: { code: 'CONSTRUCTION', name: 'Xây dựng', level: 1 },
-  });
-  const mining = await prisma.businessField.upsert({
-    where: { code: 'MINING' },
-    update: {},
-    create: { code: 'MINING', name: 'Khai khoáng', level: 1 },
-  });
-  const agriculture = await prisma.businessField.upsert({
-    where: { code: 'AGRICULTURE' },
-    update: {},
-    create: { code: 'AGRICULTURE', name: 'Nông lâm ngư nghiệp', level: 1 },
-  });
-  const transportation = await prisma.businessField.upsert({
-    where: { code: 'TRANSPORTATION' },
-    update: {},
-    create: { code: 'TRANSPORTATION', name: 'Vận tải', level: 1 },
-  });
+  const businessFieldsData = [
+    // A: NÔNG NGHIỆP, LÂM NGHIỆP VÀ THỦY SẢN
+    { code: 'A', name: 'NÔNG NGHIỆP, LÂM NGHIỆP VÀ THỦY SẢN', level: 1, parentCode: null },
+    { code: '01', name: 'Nông nghiệp và hoạt động dịch vụ có liên quan', level: 2, parentCode: 'A' },
+    { code: '011', name: 'Trồng cây hàng năm', level: 3, parentCode: '01' },
+    { code: '0111', name: 'Trồng lúa', level: 4, parentCode: '011' },
+    { code: '0112', name: 'Trồng ngô và cây lương thực có hạt khác', level: 4, parentCode: '011' },
+    { code: '0113', name: 'Trồng cây lấy củ có chất bột', level: 4, parentCode: '011' },
+    { code: '0114', name: 'Trồng cây mía', level: 4, parentCode: '011' },
+    { code: '0115', name: 'Trồng cây thuốc lá, thuốc lào', level: 4, parentCode: '011' },
+    { code: '0116', name: 'Trồng cây lấy sợi', level: 4, parentCode: '011' },
+    { code: '0117', name: 'Trồng cây có hạt chứa dầu', level: 4, parentCode: '011' },
+    { code: '0118', name: 'Trồng rau, đậu các loại và trồng hoa', level: 4, parentCode: '011' },
+    { code: '0119', name: 'Trồng cây hàng năm khác', level: 4, parentCode: '011' },
+    { code: '012', name: 'Trồng cây lâu năm', level: 3, parentCode: '01' },
+    { code: '0121', name: 'Trồng cây ăn quả', level: 4, parentCode: '012' },
+    { code: '0122', name: 'Trồng cây lấy quả chứa dầu', level: 4, parentCode: '012' },
+    { code: '0123', name: 'Trồng cây điều', level: 4, parentCode: '012' },
+    { code: '0124', name: 'Trồng cây hồ tiêu', level: 4, parentCode: '012' },
+    { code: '0125', name: 'Trồng cây cao su', level: 4, parentCode: '012' },
+    { code: '0126', name: 'Trồng cây cà phê', level: 4, parentCode: '012' },
+    { code: '0127', name: 'Trồng cây chè', level: 4, parentCode: '012' },
+    { code: '0128', name: 'Trồng cây gia vị, cây dược liệu, cây hương liệu lâu năm', level: 4, parentCode: '012' },
+    { code: '0129', name: 'Trồng cây lâu năm khác', level: 4, parentCode: '012' },
+    { code: '013', name: 'Nhân và chăm sóc cây giống nông nghiệp', level: 3, parentCode: '01' },
+    { code: '0130', name: 'Nhân và chăm sóc cây giống nông nghiệp', level: 4, parentCode: '013' },
+    { code: '014', name: 'Chăn nuôi', level: 3, parentCode: '01' },
+    { code: '0141', name: 'Chăn nuôi trâu, bò và sản xuất giống trâu, bò', level: 4, parentCode: '014' },
+    { code: '0142', name: 'Chăn nuôi ngựa, lừa, la và sản xuất giống ngựa, lừa', level: 4, parentCode: '014' },
+    { code: '0144', name: 'Chăn nuôi dê, cừu, hươu, nai và sản xuất giống dê, cừu, hươu, nai', level: 4, parentCode: '014' },
+    { code: '0145', name: 'Chăn nuôi lợn và sản xuất giống lợn', level: 4, parentCode: '014' },
+    { code: '0146', name: 'Chăn nuôi gia cầm', level: 4, parentCode: '014' },
+    { code: '0149', name: 'Chăn nuôi khác', level: 4, parentCode: '014' },
+    { code: '015', name: 'Trồng trọt, chăn nuôi hỗn hợp', level: 3, parentCode: '01' },
+    { code: '0150', name: 'Trồng trọt, chăn nuôi hỗn hợp', level: 4, parentCode: '015' },
+    { code: '016', name: 'Hoạt động dịch vụ nông nghiệp', level: 3, parentCode: '01' },
+    { code: '0161', name: 'Hoạt động dịch vụ trồng trọt', level: 4, parentCode: '016' },
+    { code: '0162', name: 'Hoạt động dịch vụ chăn nuôi', level: 4, parentCode: '016' },
+    { code: '0163', name: 'Hoạt động dịch vụ sau thu hoạch', level: 4, parentCode: '016' },
+    { code: '0164', name: 'Xử lý hạt giống để nhân giống', level: 4, parentCode: '016' },
+    { code: '017', name: 'Săn bắt, đánh bẫy và hoạt động dịch vụ có liên quan', level: 3, parentCode: '01' },
+    { code: '0170', name: 'Săn bắt, đánh bẫy và hoạt động dịch vụ có liên quan', level: 4, parentCode: '017' },
 
-  // Level-2 fields
-  const textileManuf = await prisma.businessField.upsert({
-    where: { code: 'TEXTILE' },
-    update: {},
-    create: {
-      code: 'TEXTILE',
-      name: 'Dệt may',
-      level: 2,
-      parentId: manufacturing.id,
-    },
-  });
-  const foodManuf = await prisma.businessField.upsert({
-    where: { code: 'FOOD_PROCESSING' },
-    update: {},
-    create: {
-      code: 'FOOD_PROCESSING',
-      name: 'Chế biến thực phẩm',
-      level: 2,
-      parentId: manufacturing.id,
-    },
-  });
-  const civilConstr = await prisma.businessField.upsert({
-    where: { code: 'CIVIL_CONSTRUCTION' },
-    update: {},
-    create: {
-      code: 'CIVIL_CONSTRUCTION',
-      name: 'Xây dựng dân dụng',
-      level: 2,
-      parentId: construction.id,
-    },
-  });
-  const coalMining = await prisma.businessField.upsert({
-    where: { code: 'COAL_MINING' },
-    update: {},
-    create: {
-      code: 'COAL_MINING',
-      name: 'Khai thác than',
-      level: 2,
-      parentId: mining.id,
-    },
-  });
-  const roadTransport = await prisma.businessField.upsert({
-    where: { code: 'ROAD_TRANSPORT' },
-    update: {},
-    create: {
-      code: 'ROAD_TRANSPORT',
-      name: 'Vận tải đường bộ',
-      level: 2,
-      parentId: transportation.id,
-    },
-  });
+    // 02: Lâm nghiệp và hoạt động dịch vụ có liên quan
+    { code: '02', name: 'Lâm nghiệp và hoạt động dịch vụ có liên quan', level: 2, parentCode: 'A' },
+    { code: '021', name: 'Trồng rừng, chăm sóc rừng và ươm giống cây lâm nghiệp', level: 3, parentCode: '02' },
+    { code: '0210', name: 'Trồng rừng, chăm sóc rừng và ươm giống cây lâm nghiệp', level: 4, parentCode: '021' },
+    { code: '022', name: 'Khai thác gỗ', level: 3, parentCode: '02' },
+    { code: '0220', name: 'Khai thác gỗ', level: 4, parentCode: '022' },
+    { code: '023', name: 'Khai thác, thu nhặt lâm sản phi gỗ', level: 3, parentCode: '02' },
+    { code: '0230', name: 'Khai thác, thu nhặt lâm sản phi gỗ', level: 4, parentCode: '023' },
+    { code: '024', name: 'Hoạt động dịch vụ lâm nghiệp', level: 3, parentCode: '02' },
+    { code: '0240', name: 'Hoạt động dịch vụ lâm nghiệp', level: 4, parentCode: '024' },
+
+    // 03: Khai thác, nuôi trồng thủy sản và hoạt động dịch vụ có liên quan
+    { code: '03', name: 'Khai thác, nuôi trồng thủy sản và hoạt động dịch vụ có liên quan', level: 2, parentCode: 'A' },
+    { code: '031', name: 'Khai thác thủy sản', level: 3, parentCode: '03' },
+    { code: '0311', name: 'Khai thác thủy sản biển', level: 4, parentCode: '031' },
+    { code: '0312', name: 'Khai thác thủy sản nội địa', level: 4, parentCode: '031' },
+    { code: '032', name: 'Nuôi trồng thủy sản', level: 3, parentCode: '03' },
+    { code: '0321', name: 'Nuôi trồng thủy sản biển', level: 4, parentCode: '032' },
+    { code: '0322', name: 'Nuôi trồng thủy sản nội địa', level: 4, parentCode: '032' },
+    { code: '033', name: 'Hoạt động dịch vụ hỗ trợ khai thác, nuôi trồng thủy sản', level: 3, parentCode: '03' },
+    { code: '0331', name: 'Hoạt động dịch vụ hỗ trợ khai thác thủy sản', level: 4, parentCode: '033' },
+    { code: '0332', name: 'Hoạt động dịch vụ hỗ trợ nuôi trồng thủy sản', level: 4, parentCode: '033' },
+
+    // B: KHAI KHOÁNG
+    { code: 'B', name: 'KHAI KHOÁNG', level: 1, parentCode: null },
+    { code: '05', name: 'Khai thác than cứng và than non', level: 2, parentCode: 'B' },
+    { code: '051', name: 'Khai thác và thu gom than cứng', level: 3, parentCode: '05' },
+    { code: '0510', name: 'Khai thác và thu gom than cứng', level: 4, parentCode: '051' },
+    { code: '052', name: 'Khai thác và thu gom than non', level: 3, parentCode: '05' },
+    { code: '0520', name: 'Khai thác và thu gom than non', level: 4, parentCode: '052' },
+    { code: '06', name: 'Khai thác dầu thô và khí đốt tự nhiên', level: 2, parentCode: 'B' },
+    { code: '061', name: 'Khai thác dầu thô', level: 3, parentCode: '06' },
+    { code: '0610', name: 'Khai thác dầu thô', level: 4, parentCode: '061' },
+    { code: '062', name: 'Khai thác khí đốt tự nhiên', level: 3, parentCode: '06' },
+    { code: '0620', name: 'Khai thác khí đốt tự nhiên', level: 4, parentCode: '062' },
+    { code: '07', name: 'Khai thác quặng kim loại', level: 2, parentCode: 'B' },
+    { code: '071', name: 'Khai thác quặng sắt', level: 3, parentCode: '07' },
+    { code: '0710', name: 'Khai thác quặng sắt', level: 4, parentCode: '071' },
+    { code: '072', name: 'Khai thác quặng không chứa sắt (trừ quặng kim loại quý hiếm)', level: 3, parentCode: '07' },
+    { code: '0721', name: 'Khai thác quặng uranium và quặng thorium', level: 4, parentCode: '072' },
+    { code: '0729', name: 'Khai thác quặng kim loại khác không chứa sắt', level: 4, parentCode: '072' },
+    { code: '073', name: 'Khai thác quặng kim loại quý hiếm', level: 3, parentCode: '07' },
+    { code: '0730', name: 'Khai thác quặng kim loại quý hiếm', level: 4, parentCode: '073' },
+    { code: '08', name: 'Khai khoáng khác', level: 2, parentCode: 'B' },
+    { code: '081', name: 'Khai thác đá, cát, sỏi, đất sét', level: 3, parentCode: '08' },
+    { code: '0810', name: 'Khai thác đá, cát, sỏi, đất sét', level: 4, parentCode: '081' },
+    { code: '089', name: 'Khai khoáng chưa được phân vào đâu', level: 3, parentCode: '08' },
+    { code: '0891', name: 'Khai thác khoáng hóa chất và khoáng phân bón', level: 4, parentCode: '089' },
+    { code: '0892', name: 'Khai thác và thu gom than bùn', level: 4, parentCode: '089' },
+    { code: '0893', name: 'Khai thác muối', level: 4, parentCode: '089' },
+    { code: '0899', name: 'Khai khoáng khác chưa được phân vào đâu', level: 4, parentCode: '089' },
+    { code: '09', name: 'Hoạt động dịch vụ hỗ trợ khai khoáng', level: 2, parentCode: 'B' },
+    { code: '091', name: 'Hoạt động dịch vụ hỗ trợ khai thác dầu thô và khí tự nhiên', level: 3, parentCode: '09' },
+    { code: '0910', name: 'Hoạt động dịch vụ hỗ trợ khai thác dầu thô và khí tự nhiên', level: 4, parentCode: '091' },
+    { code: '099', name: 'Hoạt động dịch vụ hỗ trợ khai khoáng khác', level: 3, parentCode: '09' },
+    { code: '0990', name: 'Hoạt động dịch vụ hỗ trợ khai khoáng khác', level: 4, parentCode: '099' },
+
+    // C: CÔNG NGHIỆP CHẾ BIẾN, CHẾ TẠO
+    { code: 'C', name: 'CÔNG NGHIỆP CHẾ BIẾN, CHẾ TẠO', level: 1, parentCode: null },
+    { code: '10', name: 'Sản xuất, chế biến thực phẩm', level: 2, parentCode: 'C' },
+    { code: '101', name: 'Chế biến, bảo quan thịt và các sản phẩm từ thịt', level: 3, parentCode: '10' },
+    { code: '1010', name: 'Chế biến, bảo quản thịt và các sản phẩm từ thịt', level: 4, parentCode: '101' },
+    { code: '102', name: 'Chế biến, bảo quản thủy sản và các sản phẩm từ thủy sản', level: 3, parentCode: '10' },
+    { code: '1020', name: 'Chế biến, bảo quản thủy sản và các sản phẩm từ thủy sản', level: 4, parentCode: '102' },
+    { code: '103', name: 'Chế biến và bảo quản rau quả', level: 3, parentCode: '10' },
+    { code: '1030', name: 'Chế biến và bảo quản rau quả', level: 4, parentCode: '103' },
+    { code: '104', name: 'Sản xuất dầu, mỡ động, thực vật', level: 3, parentCode: '10' },
+    { code: '1040', name: 'Sản xuất dầu, mỡ động, thực vật', level: 4, parentCode: '104' },
+    { code: '105', name: 'Chế biến sữa và các sản phẩm từ sữa', level: 3, parentCode: '10' },
+    { code: '1050', name: 'Chế biến sữa và các sản phẩm từ sữa', level: 4, parentCode: '105' },
+    { code: '106', name: 'Xay xát và sản xuất bột', level: 3, parentCode: '10' },
+    { code: '1061', name: 'Xay xát và sản xuất bột thô', level: 4, parentCode: '106' },
+    { code: '1062', name: 'Sản xuất tinh bột và các sản phẩm từ tinh bột', level: 4, parentCode: '106' },
+    { code: '107', name: 'Sản xuất thực phẩm khác', level: 3, parentCode: '10' },
+    { code: '1071', name: 'Sản xuất các loại bánh từ bột', level: 4, parentCode: '107' }
+  ];
+
+  const codeToIdMap: Record<string, number> = {};
+  for (const f of businessFieldsData) {
+    const parentId = f.parentCode ? codeToIdMap[f.parentCode] : null;
+    const record = await prisma.businessField.upsert({
+      where: { code: f.code },
+      update: {
+        name: f.name,
+        level: f.level,
+        parentId: parentId || undefined,
+      },
+      create: {
+        code: f.code,
+        name: f.name,
+        level: f.level,
+        parentId: parentId || undefined,
+      },
+    });
+    codeToIdMap[f.code] = record.id;
+  }
 
   const level1Fields = [
-    manufacturing,
-    construction,
-    mining,
-    agriculture,
-    transportation,
-  ];
+    codeToIdMap['A'],
+    codeToIdMap['B'],
+    codeToIdMap['C'],
+  ].filter(Boolean);
 
   // ==================================================
   // CATEGORIES (10 records each type × 4 types = 40 total)
@@ -499,8 +558,8 @@ async function main() {
       taxCode: '0312345671',
       licenseNumber: 'GPD1000001',
       name: 'Công ty TNHH ABC',
-      businessTypeId: businessTypes[0].id,
-      businessFieldId: manufacturing.id,
+      businessTypeId: businessTypeCodeToIdMap['120'] || 1,
+      businessFieldId: codeToIdMap['10'] || 1,
       registeredAddress: 'Quận 1, TP.HCM',
       representativeName: 'Nguyễn Văn A',
       officePhone: '0901111001',
@@ -512,8 +571,8 @@ async function main() {
       taxCode: '0312345672',
       licenseNumber: 'GPD1000002',
       name: 'Công ty Cổ phần XYZ',
-      businessTypeId: businessTypes[2].id,
-      businessFieldId: construction.id,
+      businessTypeId: businessTypeCodeToIdMap['160'] || 1,
+      businessFieldId: codeToIdMap['011'] || 1,
       registeredAddress: 'Quận 3, TP.HCM',
       representativeName: 'Trần Thị B',
       officePhone: '0901111002',
@@ -525,8 +584,8 @@ async function main() {
       taxCode: '0312345673',
       licenseNumber: 'GPD1000003',
       name: 'Hợp tác xã Nông nghiệp Xanh',
-      businessTypeId: businessTypes[1].id,
-      businessFieldId: agriculture.id,
+      businessTypeId: businessTypes[2].id,
+      businessFieldId: codeToIdMap['01'] || 1,
       registeredAddress: 'Huyện Củ Chi, TP.HCM',
       representativeName: 'Lê Văn C',
       officePhone: '0901111003',
@@ -538,8 +597,8 @@ async function main() {
       taxCode: '0312345674',
       licenseNumber: 'GPD1000004',
       name: 'Công ty TNHH MTV Khai Thác Mỏ',
-      businessTypeId: businessTypes[9].id,
-      businessFieldId: mining.id,
+      businessTypeId: businessTypeCodeToIdMap['110'] || 1,
+      businessFieldId: codeToIdMap['05'] || 1,
       registeredAddress: 'Quảng Ninh',
       representativeName: 'Phạm Thị D',
       officePhone: '0901111004',
@@ -551,8 +610,8 @@ async function main() {
       taxCode: '0312345675',
       licenseNumber: 'GPD1000005',
       name: 'Công ty Vận tải Đông Nam',
-      businessTypeId: businessTypes[0].id,
-      businessFieldId: transportation.id,
+      businessTypeId: businessTypeCodeToIdMap['160'] || 1,
+      businessFieldId: codeToIdMap['03'] || 1,
       registeredAddress: 'Bình Dương',
       representativeName: 'Hoàng Văn E',
       officePhone: '0901111005',
@@ -564,8 +623,8 @@ async function main() {
       taxCode: '0312345676',
       licenseNumber: 'GPD1000006',
       name: 'Công ty Dệt May Phương Nam',
-      businessTypeId: businessTypes[2].id,
-      businessFieldId: textileManuf.id,
+      businessTypeId: businessTypeCodeToIdMap['160'] || 1,
+      businessFieldId: codeToIdMap['10'] || 1,
       registeredAddress: 'Long An',
       representativeName: 'Vũ Thị F',
       officePhone: '0901111006',
@@ -577,8 +636,8 @@ async function main() {
       taxCode: '0312345677',
       licenseNumber: 'GPD1000007',
       name: 'Công ty Chế Biến Thực Phẩm Sao Mai',
-      businessTypeId: businessTypes[0].id,
-      businessFieldId: foodManuf.id,
+      businessTypeId: businessTypeCodeToIdMap['120'] || 1,
+      businessFieldId: codeToIdMap['101'] || 1,
       registeredAddress: 'Tiền Giang',
       representativeName: 'Đặng Văn G',
       officePhone: '0901111007',
@@ -591,8 +650,8 @@ async function main() {
       taxCode: '0312345678',
       licenseNumber: 'GPD1000008',
       name: 'Công ty Xây Dựng Tiến Phát',
-      businessTypeId: businessTypes[2].id,
-      businessFieldId: civilConstr.id,
+      businessTypeId: businessTypeCodeToIdMap['160'] || 1,
+      businessFieldId: codeToIdMap['106'] || 1,
       registeredAddress: 'Đồng Nai',
       representativeName: 'Bùi Thị H',
       officePhone: '0901111008',
@@ -604,8 +663,8 @@ async function main() {
       taxCode: '0312345679',
       licenseNumber: 'GPD1000009',
       name: 'Công ty Khai Thác Than Hồng Hà',
-      businessTypeId: businessTypes[3].id,
-      businessFieldId: coalMining.id,
+      businessTypeId: businessTypeCodeToIdMap['110'] || 1,
+      businessFieldId: codeToIdMap['0510'] || 1,
       registeredAddress: 'Quảng Ngãi',
       representativeName: 'Ngô Văn I',
       officePhone: '0901111009',
@@ -833,7 +892,7 @@ async function main() {
   console.log(`   Roles: ${allRoles.length}`);
   console.log(`   Permissions: ${permissions.length}`);
   console.log(`   BusinessTypes: ${businessTypes.length}`);
-  console.log(`   BusinessFields: 10`);
+  console.log(`   BusinessFields: ${businessFieldsData.length}`);
   console.log(`   Categories: ${categoryData.length} (across 4 types)`);
   console.log(`   Users: ${enterpriseUsers.length + 1}`);
   console.log(`   Enterprises: ${enterprises.length}`);

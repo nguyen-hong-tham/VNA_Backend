@@ -64,14 +64,12 @@ export class SupabaseService {
 
     const allowedMimeTypes = [
       'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ];
     const isImage = file.mimetype.startsWith('image/');
 
     if (!allowedMimeTypes.includes(file.mimetype) && !isImage) {
       throw new BadRequestException(
-        'Định dạng file không hỗ trợ. Chỉ cho phép file PDF, Word (.doc, .docx) hoặc hình ảnh.',
+        'Định dạng file không hỗ trợ. Chỉ cho phép file PDF hoặc hình ảnh.',
       );
     }
 

@@ -87,4 +87,24 @@ export class BusinessFieldRepository {
       create: { code, name, level, parentId, status },
     });
   }
+
+  async hasChildren(id: number): Promise<boolean> {
+    const count = await this.prisma.businessField.count({
+      where: { parentId: id },
+    });
+    return count > 0;
+  }
+
+  async hasEnterprises(id: number): Promise<boolean> {
+    const count = await this.prisma.enterprise.count({
+      where: { businessFieldId: id },
+    });
+    return count > 0;
+  }
+
+  async delete(id: number) {
+    return this.prisma.businessField.delete({
+      where: { id },
+    });
+  }
 }

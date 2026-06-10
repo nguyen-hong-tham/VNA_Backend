@@ -213,4 +213,12 @@ export class EnterpriseController {
   ) {
     return this.enterpriseService.importFromFile(file);
   }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Xóa doanh nghiệp (đồng thời xóa tài khoản người dùng, báo cáo và tài liệu liên quan)' })
+  @ApiResponse({ status: 200, description: 'Xóa doanh nghiệp thành công' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy doanh nghiệp' })
+  async delete(@Param('id', ParseIntPipe) id: number) {
+    return this.enterpriseService.delete(id);
+  }
 }

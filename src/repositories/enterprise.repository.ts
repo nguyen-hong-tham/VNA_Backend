@@ -402,4 +402,30 @@ export class EnterpriseRepository {
       },
     });
   }
+
+  async delete(id: number) {
+    return this.prisma.$transaction(async (tx) => {
+      const enterprise = await tx.enterprise.findUnique({
+        where: { id },
+      });
+      if (!enterprise) return null;
+
+      // Delete reports (cascades to sections and accident cases)
+      await tx.report.deleteMany({
+        where: { enterpriseId: id },
+      });
+
+      // Delete enterprise (cascades to documents)
+      await tx.enterprise.delete({
+        where: { id },
+      });
+
+      // Delete linked user (cascades to password resets and email change otps)
+      await tx.user.delete({
+        where: { id: enterprise.userId },
+      });
+
+      return enterprise;
+    });
+  }
 }
