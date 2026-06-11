@@ -55,39 +55,6 @@ export class PrismaService
         }
       }
 
-      // 3. Seed default Business Types (Loại hình kinh doanh)
-      const businessTypes = [
-        { code: 'CP', name: 'Công ty Cổ phần' },
-        { code: 'TNHH1', name: 'Công ty TNHH 1 Thành viên' },
-        { code: 'TNHH2', name: 'Công ty TNHH 2 Thành viên trở lên' },
-        { code: 'DNTN', name: 'Doanh nghiệp tư nhân' },
-        { code: 'HTX', name: 'Hợp tác xã' },
-      ];
-      for (const bt of businessTypes) {
-        await this.businessType.upsert({
-          where: { code: bt.code },
-          update: {},
-          create: { code: bt.code, name: bt.name },
-        });
-      }
-
-      // 4. Seed default Business Fields (Ngành nghề kinh doanh)
-      const businessFields = [
-        { code: 'CNTT', name: 'Sản xuất phần mềm và Dịch vụ CNTT' },
-        { code: 'CKCT', name: 'Cơ khí chế tạo & Lắp ráp' },
-        { code: 'DMGD', name: 'Dệt may và Giày da' },
-        { code: 'XD', name: 'Xây dựng công trình' },
-        { code: 'CBTPDB', name: 'Chế biến thực phẩm và Đồ uống' },
-        { code: 'TMDV', name: 'Thương mại & Dịch vụ' },
-      ];
-      for (const bf of businessFields) {
-        await this.businessField.upsert({
-          where: { code: bf.code },
-          update: {},
-          create: { code: bf.code, name: bf.name, level: 1 },
-        });
-      }
-
       console.log('✅ Completed database seed checks');
     } catch (error) {
       console.error('❌ Failed to seed database:', error);

@@ -202,11 +202,11 @@ model Enterprise {
   businessFieldId    Int              @map("business_field_id")
   provinceId         Int?             @map("province_id")
   wardId             Int?             @map("ward_id")
-  registeredAddress  String           @map("registered_address") @db.Text
+  registeredAddress  String?          @map("registered_address") @db.Text
   operatingAddress   String?          @map("operating_address") @db.Text
   email              String?          @unique @db.VarChar(255)
   officePhone        String?          @map("office_phone") @db.VarChar(20)
-  representativeName String           @map("representative_name") @db.VarChar(255)
+  representativeName String?          @map("representative_name") @db.VarChar(255)
   representativePhone String?         @map("representative_phone") @db.VarChar(20)
   status             EnterpriseStatus @default(PENDING)
   approvedAt         DateTime?        @map("approved_at")
