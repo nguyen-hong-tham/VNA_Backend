@@ -11,6 +11,7 @@ import {
   ParseFilePipe,
   MaxFileSizeValidator,
   FileTypeValidator,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -28,7 +29,8 @@ import { VerifyEmailChangeDto } from '../dto/verify-email-change.dto';
 import { UpdateEmailDto } from '../dto/update-email.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-
+import { QueryUserDto } from '../dto/user/query_user.dto';
+import { UserService } from '../services/user.service'
 interface AuthenticatedRequest extends Request {
   user: {
     id: number;
@@ -44,7 +46,7 @@ interface AuthenticatedRequest extends Request {
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class UserController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private userService: UserService) { }
 
   @Get('me')
   @ApiOperation({ summary: 'Lấy thông tin tài khoản hiện tại' })
@@ -147,4 +149,14 @@ export class UserController {
   ) {
     return this.authService.changePassword(req.user.id, dto);
   }
+
+  // ----------------------get alll
+
+  @Get('get-all')
+  @ApiOperation({ summary: 'get all' })
+  async queryUser(@Query() query: QueryUserDto) {
+    return this.userService.getUser(query);
+  }
+
+
 }
