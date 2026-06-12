@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import WebSocket from 'ws';
 
 @Injectable()
 export class SupabaseService {
@@ -16,7 +17,14 @@ export class SupabaseService {
       this.configService.get<string>('SUPABASE_BUCKET_NAME') || 'avatars';
 
     if (url && key && url !== 'https://your-supabase-project.supabase.co') {
-      this.supabase = createClient(url, key);
+      this.supabase = createClient(url, key, {
+        auth: {
+          persistSession: false,
+        },
+        realtime: {
+          transport: WebSocket as any,
+        },
+      });
     }
   }
 
