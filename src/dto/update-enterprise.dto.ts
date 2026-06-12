@@ -7,6 +7,8 @@ import {
   ValidateNested,
   IsArray,
   IsEnum,
+  IsNotEmpty,
+  Matches,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { EnterpriseDocumentDto } from './create-enterprise.dto';
@@ -19,6 +21,7 @@ export class UpdateEnterpriseDto {
     required: false,
   })
   @IsOptional()
+  @IsNotEmpty({ message: 'Tên doanh nghiệp không được để trống' })
   @IsString({ message: 'Tên doanh nghiệp phải là chuỗi ký tự' })
   name?: string;
 
@@ -28,6 +31,7 @@ export class UpdateEnterpriseDto {
     required: false,
   })
   @IsOptional()
+  @IsNotEmpty({ message: 'Số giấy phép kinh doanh không được để trống' })
   @IsString()
   licenseNumber?: string;
 
@@ -86,6 +90,7 @@ export class UpdateEnterpriseDto {
     required: false,
   })
   @IsOptional()
+  @IsNotEmpty({ message: 'Địa chỉ đăng ký không được để trống' })
   @IsString({ message: 'Địa chỉ đăng ký phải là chuỗi ký tự' })
   registeredAddress?: string;
 
@@ -115,6 +120,7 @@ export class UpdateEnterpriseDto {
     required: false,
   })
   @IsOptional()
+  @IsNotEmpty({ message: 'Địa chỉ hoạt động không được để trống' })
   @IsString()
   operatingAddress?: string;
 
@@ -124,6 +130,7 @@ export class UpdateEnterpriseDto {
     required: false,
   })
   @IsOptional()
+  @IsNotEmpty({ message: 'Tên tiếng nước ngoài không được để trống' })
   @IsString()
   englishName?: string;
 
@@ -133,6 +140,7 @@ export class UpdateEnterpriseDto {
     required: false,
   })
   @IsOptional()
+  @IsNotEmpty({ message: 'Email không được để trống' })
   @IsEmail({}, { message: 'Địa chỉ email không đúng định dạng' })
   email?: string;
 
@@ -142,7 +150,12 @@ export class UpdateEnterpriseDto {
     required: false,
   })
   @IsOptional()
+  @IsNotEmpty({ message: 'Số điện thoại cơ quan không được để trống' })
   @IsString()
+  @Matches(/^(0|\+84)\d{9,10}$/, {
+    message:
+      'Số điện thoại cơ quan không đúng định dạng (phải bắt đầu bằng 0 hoặc +84 và có 10 hoặc 11 chữ số)',
+  })
   officePhone?: string;
 
   @ApiProperty({
@@ -151,6 +164,7 @@ export class UpdateEnterpriseDto {
     required: false,
   })
   @IsOptional()
+  @IsNotEmpty({ message: 'Người đứng đầu không được để trống' })
   @IsString({ message: 'Người đứng đầu phải là chuỗi ký tự' })
   representativeName?: string;
 
@@ -160,7 +174,12 @@ export class UpdateEnterpriseDto {
     required: false,
   })
   @IsOptional()
+  @IsNotEmpty({ message: 'Số điện thoại người đứng đầu không được để trống' })
   @IsString()
+  @Matches(/^(0|\+84)\d{9,10}$/, {
+    message:
+      'Số điện thoại người đứng đầu không đúng định dạng (phải bắt đầu bằng 0 hoặc +84 và có 10 hoặc 11 chữ số)',
+  })
   representativePhone?: string;
 
   @ApiProperty({
@@ -184,4 +203,3 @@ export class UpdateEnterpriseStatusDto {
   @IsEnum(EnterpriseStatus, { message: 'Trạng thái không hợp lệ' })
   status: EnterpriseStatus;
 }
-

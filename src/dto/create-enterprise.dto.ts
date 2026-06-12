@@ -40,7 +40,8 @@ export class EnterpriseDocumentDto {
   fileName: string;
 
   @ApiProperty({
-    example: 'https://zufqfogsgqlfeokkiyvb.supabase.co/storage/v1/object/public/avatars/documents/license.pdf',
+    example:
+      'https://zufqfogsgqlfeokkiyvb.supabase.co/storage/v1/object/public/avatars/documents/license.pdf',
     description: 'Đường dẫn file lưu trữ',
   })
   @IsNotEmpty({ message: 'Đường dẫn file không được để trống' })
@@ -200,6 +201,10 @@ export class CreateEnterpriseDto {
   })
   @IsOptional()
   @IsString()
+  @Matches(/^(0|\+84)\d{9,10}$/, {
+    message:
+      'Số điện thoại cơ quan không đúng định dạng (phải bắt đầu bằng 0 hoặc +84 và có 10 hoặc 11 chữ số)',
+  })
   officePhone?: string;
 
   @ApiProperty({
@@ -218,6 +223,10 @@ export class CreateEnterpriseDto {
   })
   @IsOptional()
   @IsString()
+  @Matches(/^(0|\+84)\d{9,10}$/, {
+    message:
+      'Số điện thoại người đứng đầu không đúng định dạng (phải bắt đầu bằng 0 hoặc +84 và có 10 hoặc 11 chữ số)',
+  })
   representativePhone?: string;
 
   @ApiProperty({
