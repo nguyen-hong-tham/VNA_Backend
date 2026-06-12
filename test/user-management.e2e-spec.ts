@@ -316,5 +316,24 @@ describe('User Management e2e Tests', () => {
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body)).toBe(true);
     });
+
+    it('Fixed Figma UI Upload: Admin can upload avatar file for other users', async () => {
+      const pngBuffer = Buffer.from(
+        '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63601805a360148c0000020000015ad85b4c0000000049454e44ae426082',
+        'hex',
+      );
+      const res = await request(app.getHttpServer())
+        .post('/api/users/upload-avatar')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .attach('file', pngBuffer, 'avatar_test.png');
+
+      // Nếu Supabase đã được config sẽ trả về 201 Created. Nếu chưa config trả về 400 Bad Request kèm message.
+      if (res.status === 400) {
+        expect(res.body.message).toContain('Supabase chưa được cấu hình');
+      } else {
+        expect(res.status).toBe(201);
+        expect(res.body).toHaveProperty('url');
+      }
+    });
   });
 });

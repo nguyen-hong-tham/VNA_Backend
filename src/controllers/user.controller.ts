@@ -35,6 +35,7 @@ import { ChangePasswordDto } from '../dto/change-password.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { QueryUserDto } from '../dto/user/query_user.dto';
 import { UserService } from '../services/user.service';
+import { SupabaseService } from '../services/supabase.service';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CreateUserDto } from '../dto/user/create-user.dto';
@@ -60,7 +61,11 @@ interface AuthenticatedRequest extends Request {
 @UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class UserController {
-  constructor(private authService: AuthService, private userService: UserService) { }
+  constructor(
+    private authService: AuthService,
+    private userService: UserService,
+    private supabaseService: SupabaseService,
+  ) { }
 
   @Get('me')
   @ApiOperation({ summary: 'Lấy thông tin tài khoản hiện tại' })
@@ -119,7 +124,8 @@ export class UserController {
           }),
           new FileTypeValidator({
             fileType: /image\/(jpeg|png|jpg|gif|webp)/,
-          }),
+            fallbackToMimetype: true,
+          } as any),
         ],
         fileIsRequired: true,
       }),
@@ -185,6 +191,50 @@ export class UserController {
   @ApiOperation({ summary: 'Lấy danh sách chức vụ/chức danh công việc hiện có' })
   async getPositions() {
     return this.userService.getPositions();
+  }
+
+  @Post('upload-avatar')
+  @Roles('ADMIN')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Tải lên ảnh đại diện cho tài khoản cán bộ nội bộ khác (Chỉ Admin)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'File ảnh đại diện (png, jpeg, jpg, gif, webp; tối đa 5MB)',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Tải lên ảnh đại diện thành công, trả về URL công khai',
+  })
+  async uploadUserAvatar(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 5 * 1024 * 1024,
+            message: 'Dung lượng file không được vượt quá 5MB',
+          }),
+          new FileTypeValidator({
+            fileType: /image\/(jpeg|png|jpg|gif|webp)/,
+            fallbackToMimetype: true,
+          } as any),
+        ],
+        fileIsRequired: true,
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    const url = await this.supabaseService.uploadAvatar(file);
+    return { url };
   }
 
   @Post()
@@ -261,7 +311,8 @@ export class UserController {
           }),
           new FileTypeValidator({
             fileType: /application\/vnd.openxmlformats-officedocument.spreadsheetml.sheet/,
-          }),
+            fallbackToMimetype: true,
+          } as any),
         ],
         fileIsRequired: true,
       }),

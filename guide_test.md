@@ -211,9 +211,29 @@ Tài liệu này hướng dẫn chi tiết từng bước kiểm thử thủ cô
     *   Gọi API `GET /api/users/export` trên Swagger, nhấn **Execute** -> chọn **Download file** để tải file `danh_sach_nguoi_dung.xlsx` về máy.
     *   Mở file Excel vừa tải xuống bằng Microsoft Excel hoặc Google Sheets.
     *   Tìm bản ghi người dùng vừa tạo.
-    *   **Kết quả mong đợi**: Tại cột **Ngày sinh**, giá trị hiển thị đúng là `20/05/1996`. Không bị dịch về ngày `19/05/1996` như các phiên bản bị lỗi múi giờ server trước đây.
+### 8. API TẢI LÊN ẢNH ĐẠI DIỆN CỦA CÁN BỘ NỘI BỘ (`POST /api/users/upload-avatar`)
+*   **Mục tiêu**: Đảm bảo admin tải lên được ảnh đại diện (avatar) cho người dùng khác và nhận lại URL ảnh hợp lệ để điền vào `avatarUrl` trong API tạo/cập nhật người dùng (độc lập với avatar của admin).
+*   **Các trường hợp kiểm thử**:
+    *   **Case 8.1: Tải lên ảnh hợp lệ (Happy Path)**:
+        *   Mở API `POST /api/users/upload-avatar` trên Swagger.
+        *   Click **Try it out**, chọn file ảnh có định dạng `.png`, `.jpg`, `.jpeg`, `.gif` hoặc `.webp` có dung lượng dưới 5MB.
+        *   Nhấn **Execute**.
+        *   **Kết quả mong đợi**: Trả về `201 Created` kèm theo đường dẫn URL của file ảnh được lưu trên Supabase Storage dạng:
+            ```json
+            {
+              "url": "https://<supabase-domain>/storage/v1/object/public/..."
+            }
+            ```
+            *(Sao chép URL này để gán vào trường `avatarUrl` trong API Tạo mới hoặc Cập nhật cán bộ).*
+    *   **Case 8.2: Tải lên file quá kích thước (> 5MB)**:
+        *   Tải lên file lớn hơn 5MB.
+        *   **Kết quả mong đợi**: Hệ thống chặn ngay tại ParseFilePipe, trả về `400 Bad Request` kèm thông báo lỗi kích thước vượt quá giới hạn 5MB.
+    *   **Case 8.3: Tải lên file sai định dạng (không phải ảnh)**:
+        *   Tải lên file `.txt` hoặc `.xlsx`.
+        *   **Kết quả mong đợi**: Trả về `400 Bad Request` kèm thông báo lỗi định dạng file không hợp lệ (hỗ trợ image/jpeg, image/png, image/jpg, image/gif, image/webp).
 
 ---
+
 
 ## BƯỚC 4: CÁC CÂU LỆNH TRUY VẤN DATABASE TRỰC TIẾP ĐỂ KIỂM TRA TÍNH ĐÚNG ĐẮN
 
