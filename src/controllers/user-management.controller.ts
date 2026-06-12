@@ -59,7 +59,7 @@ export class UserManagementController {
   constructor(
     private userService: UserService,
     private supabaseService: SupabaseService,
-  ) {}
+  ) { }
 
   @Get('get-all')
   @Roles('ADMIN', 'MANAGER', 'STAFF')
@@ -188,6 +188,20 @@ export class UserManagementController {
   @Roles('ADMIN')
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Nhập danh sách cán bộ từ file Excel (.xlsx)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'File Excel (.xlsx) chứa danh sách cán bộ (tối đa 5MB)',
+        },
+      },
+      required: ['file'],
+    },
+  })
   async importUsers(
     @UploadedFile(
       new ParseFilePipe({
@@ -222,5 +236,12 @@ export class UserManagementController {
     });
 
     res.end(buffer);
+  }
+
+  @Get(':id')
+  @Roles('ADMIN', 'MANAGER', 'STAFF')
+  @ApiOperation({ summary: 'Lấy thông tin chi tiết một cán bộ nội bộ theo ID' })
+  async getUserById(@Param('id', ParseIntPipe) id: number) {
+    return this.userService.getUserById(id);
   }
 }

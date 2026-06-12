@@ -14,25 +14,25 @@ async function main() {
   // ==================================================
   const adminRole = await prisma.role.upsert({
     where: { code: 'ADMIN' },
-    update: {},
+    update: { name: 'Quản trị viên' },
     create: { code: 'ADMIN', name: 'Quản trị viên' },
   });
 
   const managerRole = await prisma.role.upsert({
     where: { code: 'MANAGER' },
-    update: {},
+    update: { name: 'Quản lý' },
     create: { code: 'MANAGER', name: 'Quản lý' },
   });
 
   const staffRole = await prisma.role.upsert({
     where: { code: 'STAFF' },
-    update: {},
+    update: { name: 'Nhân viên nghiệp vụ' },
     create: { code: 'STAFF', name: 'Nhân viên nghiệp vụ' },
   });
 
   const enterpriseRole = await prisma.role.upsert({
     where: { code: 'ENTERPRISE' },
-    update: {},
+    update: { name: 'Doanh nghiệp' },
     create: { code: 'ENTERPRISE', name: 'Doanh nghiệp' },
   });
 
@@ -474,11 +474,13 @@ async function main() {
       username: 'manager01',
       email: 'manager01@example.com',
       fullName: 'Trần Văn Quản Lý 01',
+      position: 'Trưởng phòng',
     },
     {
       username: 'manager02',
       email: 'manager02@example.com',
       fullName: 'Lê Thị Quản Lý 02',
+      position: 'Phó trưởng phòng',
     },
   ];
 
@@ -487,16 +489,19 @@ async function main() {
       username: 'staff01',
       email: 'staff01@example.com',
       fullName: 'Nguyễn Văn Nhân Viên 01',
+      position: 'Chuyên viên',
     },
     {
       username: 'staff02',
       email: 'staff02@example.com',
       fullName: 'Trần Thị Nhân Viên 02',
+      position: 'Kế toán viên',
     },
     {
       username: 'staff03',
       email: 'staff03@example.com',
       fullName: 'Lê Văn Nhân Viên 03',
+      position: 'Thanh tra viên',
     },
   ];
 
@@ -552,7 +557,7 @@ async function main() {
     managerUsersData.map((u) =>
       prisma.user.upsert({
         where: { username: u.username },
-        update: {},
+        update: { position: u.position },
         create: { ...u, passwordHash, roleId: managerRole.id },
       }),
     ),
@@ -562,7 +567,7 @@ async function main() {
     staffUsersData.map((u) =>
       prisma.user.upsert({
         where: { username: u.username },
-        update: {},
+        update: { position: u.position },
         create: { ...u, passwordHash, roleId: staffRole.id },
       }),
     ),

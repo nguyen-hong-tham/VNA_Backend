@@ -22,7 +22,7 @@ export class PrismaService
       for (const role of roles) {
         await this.role.upsert({
           where: { code: role.code },
-          update: {},
+          update: { name: role.name },
           create: { code: role.code, name: role.name },
         });
       }

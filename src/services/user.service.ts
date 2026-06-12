@@ -101,6 +101,14 @@ export class UserService {
         });
     }
 
+    async getUserById(id: number) {
+        const user = await this.userRepository.findUniqueById(id);
+        if (!user) {
+            throw new NotFoundException('Không tìm thấy người dùng');
+        }
+        return user;
+    }
+
     async updateUser(userId: number, dto: UpdateUserDto) {
         const user = await this.userRepository.findUniqueById(userId);
         if (!user) {
