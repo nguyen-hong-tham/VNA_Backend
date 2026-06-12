@@ -22,6 +22,10 @@ export class QueryUserDto {
     @IsString()
     email?: string;
 
+    @IsOptional()
+    @IsString()
+    position?: string;
+
 
     @IsOptional()
     @IsInt()
@@ -39,6 +43,7 @@ export class QueryUserDto {
     isActive?: boolean;
 
 
+
     @IsOptional()
     @IsInt()
     @Type(() => Number)
@@ -50,6 +55,8 @@ export class QueryUserDto {
     @IsInt()
     @Min(1)
     limit?: number = 10;
+
+
 
 
 }

@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: number; email: string }) {
+  async validate(payload: { sub: number; email: string; version: number }) {
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       include: { role: true, enterpriseProfile: true },
@@ -43,7 +43,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!user.isActive) {
       throw new UnauthorizedException('Tài khoản này đã bị khóa');
     }
-
+    // kiểm tra version của token có trùng khớp vs db hay ko 
+    if (payload.version !== user.tokenVersion) {
+      throw new UnauthorizedException("Mật khẩu đã thay đổi. Vui lòng đăng nhập lại");
+    }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...result } = user as any;
     if (result.birthDate && result.birthDate instanceof Date) {

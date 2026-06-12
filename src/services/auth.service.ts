@@ -32,7 +32,7 @@ export class AuthService {
     private mailService: MailService,
     private prisma: PrismaService,
     private supabaseService: SupabaseService,
-  ) {}
+  ) { }
 
   private formatUserResponse(user: any) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -71,9 +71,7 @@ export class AuthService {
       );
     }
 
-    const payload = { sub: user.id, email: user.email };
-
-    // Generate Access Token
+    const payload = { sub: user.id, email: user.email, version: user.tokenVersion };    // Generate Access Token
     const accessToken = await this.jwtService.signAsync(payload, {
       secret:
         this.configService.get<string>('JWT_SECRET') || 'super_secret_jwt_key',
@@ -112,8 +110,11 @@ export class AuthService {
       if (!user || !user.isActive) {
         throw new UnauthorizedException('Phiên làm việc không hợp lệ');
       }
+      if (payload.version !== user.tokenVersion) {
+        throw new UnauthorizedException('Phiên làm việc không hợp lệ');
+      }
 
-      const newPayload = { sub: user.id, email: user.email };
+      const newPayload = { sub: user.id, email: user.email, version: user.tokenVersion };
       const accessToken = await this.jwtService.signAsync(newPayload, {
         secret:
           this.configService.get<string>('JWT_SECRET') ||
@@ -214,7 +215,7 @@ export class AuthService {
     // Send email change OTP code
     this.mailService
       .sendEmailChangeOtpEmail(email, user.fullName || user.username, otp)
-      .catch(() => {});
+      .catch(() => { });
 
     console.log(
       `\n🔑 [DEV ONLY] Mã OTP thay đổi email của ${email} là: ${otp}\n`,
@@ -397,7 +398,7 @@ export class AuthService {
         user.username,
         otp,
       )
-      .catch(() => {});
+      .catch(() => { });
 
     console.log(
       `\n🔑 [DEV ONLY] Mã OTP quên mật khẩu của ${email} là: ${otp}\n`,
