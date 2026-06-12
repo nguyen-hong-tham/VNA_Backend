@@ -4,8 +4,7 @@ import { PrismaClient } from '@prisma/client';
 @Injectable()
 export class PrismaService
   extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
-{
+  implements OnModuleInit, OnModuleDestroy {
   async onModuleInit() {
     await this.$connect();
     await this.seed();
@@ -17,7 +16,8 @@ export class PrismaService
       const roles = [
         { code: 'ADMIN', name: 'Quản trị viên' },
         { code: 'MANAGER', name: 'Quản lý' },
-        { code: 'STAFF', name: 'Nhân viên' },
+        { code: 'STAFF', name: 'Nhân viên nghiệp vụ' },
+        { code: 'ENTERPRISE', name: 'Doanh nghiệp' },
       ];
       for (const role of roles) {
         await this.role.upsert({

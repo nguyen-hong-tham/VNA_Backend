@@ -17,6 +17,7 @@ import { SupabaseService } from './services/supabase.service';
 import { BusinessTypeService } from './services/business-type.service';
 import { BusinessFieldService } from './services/business-field.service';
 import { EnterpriseService } from './services/enterprise.service';
+import { UserService } from './services/user.service';
 
 // Repositories
 import { PrismaService } from './repositories/prisma.service';
@@ -52,6 +53,7 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
     BusinessTypeService,
     BusinessFieldService,
     EnterpriseService,
+    UserService,
     PrismaService,
     UserRepository,
     PasswordResetRepository,

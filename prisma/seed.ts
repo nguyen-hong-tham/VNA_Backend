@@ -10,18 +10,12 @@ async function main() {
   const passwordHash = await bcrypt.hash('123456', 10);
 
   // ==================================================
-  // ROLES (2 records - logic requires ADMIN + ENTERPRISE)
+  // ROLES (4 records in order: ADMIN, MANAGER, STAFF, ENTERPRISE)
   // ==================================================
   const adminRole = await prisma.role.upsert({
     where: { code: 'ADMIN' },
     update: {},
     create: { code: 'ADMIN', name: 'Quản trị viên' },
-  });
-
-  const enterpriseRole = await prisma.role.upsert({
-    where: { code: 'ENTERPRISE' },
-    update: {},
-    create: { code: 'ENTERPRISE', name: 'Doanh nghiệp' },
   });
 
   const managerRole = await prisma.role.upsert({
@@ -30,59 +24,23 @@ async function main() {
     create: { code: 'MANAGER', name: 'Quản lý' },
   });
 
-  const inspectorRole = await prisma.role.upsert({
-    where: { code: 'INSPECTOR' },
+  const staffRole = await prisma.role.upsert({
+    where: { code: 'STAFF' },
     update: {},
-    create: { code: 'INSPECTOR', name: 'Thanh tra viên' },
+    create: { code: 'STAFF', name: 'Nhân viên nghiệp vụ' },
   });
 
-  const analystRole = await prisma.role.upsert({
-    where: { code: 'ANALYST' },
+  const enterpriseRole = await prisma.role.upsert({
+    where: { code: 'ENTERPRISE' },
     update: {},
-    create: { code: 'ANALYST', name: 'Chuyên viên phân tích' },
-  });
-
-  const auditorRole = await prisma.role.upsert({
-    where: { code: 'AUDITOR' },
-    update: {},
-    create: { code: 'AUDITOR', name: 'Kiểm toán viên' },
-  });
-
-  const reporterRole = await prisma.role.upsert({
-    where: { code: 'REPORTER' },
-    update: {},
-    create: { code: 'REPORTER', name: 'Người báo cáo' },
-  });
-
-  const viewerRole = await prisma.role.upsert({
-    where: { code: 'VIEWER' },
-    update: {},
-    create: { code: 'VIEWER', name: 'Người xem' },
-  });
-
-  const coordinatorRole = await prisma.role.upsert({
-    where: { code: 'COORDINATOR' },
-    update: {},
-    create: { code: 'COORDINATOR', name: 'Điều phối viên' },
-  });
-
-  const supervisorRole = await prisma.role.upsert({
-    where: { code: 'SUPERVISOR' },
-    update: {},
-    create: { code: 'SUPERVISOR', name: 'Giám sát viên' },
+    create: { code: 'ENTERPRISE', name: 'Doanh nghiệp' },
   });
 
   const allRoles = [
     adminRole,
-    enterpriseRole,
     managerRole,
-    inspectorRole,
-    analystRole,
-    auditorRole,
-    reporterRole,
-    viewerRole,
-    coordinatorRole,
-    supervisorRole,
+    staffRole,
+    enterpriseRole,
   ];
 
   // ==================================================
@@ -112,8 +70,10 @@ async function main() {
   );
 
   // ==================================================
-  // ROLE PERMISSIONS (admin gets all 10)
+  // ROLE PERMISSIONS
   // ==================================================
+
+  // admin gets all 10 permissions
   for (const permission of permissions) {
     await prisma.rolePermission.upsert({
       where: {
@@ -127,9 +87,10 @@ async function main() {
     });
   }
 
-  // manager gets view + export permissions
+  // manager gets approve, view, export, enterprise view, and dashboard view permissions
   for (const perm of permissions.filter((p) =>
     [
+      'ENTERPRISE_APPROVE',
       'REPORT_VIEW',
       'REPORT_EXPORT',
       'ENTERPRISE_VIEW',
@@ -142,6 +103,23 @@ async function main() {
       },
       update: {},
       create: { roleId: managerRole.id, permissionId: perm.id },
+    });
+  }
+
+  // staff gets view, dashboard view, and enterprise view permissions
+  for (const perm of permissions.filter((p) =>
+    [
+      'REPORT_VIEW',
+      'ENTERPRISE_VIEW',
+      'DASHBOARD_VIEW',
+    ].includes(p.code),
+  )) {
+    await prisma.rolePermission.upsert({
+      where: {
+        roleId_permissionId: { roleId: staffRole.id, permissionId: perm.id },
+      },
+      update: {},
+      create: { roleId: staffRole.id, permissionId: perm.id },
     });
   }
 
