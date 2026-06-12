@@ -101,6 +101,14 @@ export class UserService {
         });
     }
 
+    async getUserById(id: number) {
+        const user = await this.userRepository.findUniqueById(id);
+        if (!user) {
+            throw new NotFoundException('Không tìm thấy người dùng');
+        }
+        return user;
+    }
+
     async updateUser(userId: number, dto: UpdateUserDto) {
         const user = await this.userRepository.findUniqueById(userId);
         if (!user) {
@@ -401,5 +409,35 @@ export class UserService {
         } catch (e: any) {
             throw new BadRequestException(`Lỗi khi đọc file Excel: ${e.message}`);
         }
+    }
+
+    async getRoles() {
+        return this.prisma.role.findMany({
+            where: {
+                isActive: true,
+                code: { not: 'ENTERPRISE' }
+            },
+            select: {
+                id: true,
+                code: true,
+                name: true,
+                description: true
+            }
+        });
+    }
+
+    async getPositions() {
+        const users = await this.prisma.user.findMany({
+            where: {
+                position: { not: null, notIn: [''] },
+            },
+            select: {
+                position: true,
+            },
+            distinct: ['position'],
+        });
+        return users
+            .map((u) => u.position?.trim())
+            .filter((pos): pos is string => !!pos);
     }
 }
