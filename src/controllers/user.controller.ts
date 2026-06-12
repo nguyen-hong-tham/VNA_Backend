@@ -173,6 +173,20 @@ export class UserController {
     return this.userService.getUser(query);
   }
 
+  @Get('roles')
+  @Roles('ADMIN', 'MANAGER', 'STAFF')
+  @ApiOperation({ summary: 'Lấy danh sách các vai trò (loại trừ Enterprise)' })
+  async getRoles() {
+    return this.userService.getRoles();
+  }
+
+  @Get('positions')
+  @Roles('ADMIN', 'MANAGER', 'STAFF')
+  @ApiOperation({ summary: 'Lấy danh sách chức vụ/chức danh công việc hiện có' })
+  async getPositions() {
+    return this.userService.getPositions();
+  }
+
   @Post()
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Tạo tài khoản người dùng mới (Chỉ Admin)' })

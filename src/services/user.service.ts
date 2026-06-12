@@ -402,4 +402,34 @@ export class UserService {
             throw new BadRequestException(`Lỗi khi đọc file Excel: ${e.message}`);
         }
     }
+
+    async getRoles() {
+        return this.prisma.role.findMany({
+            where: {
+                isActive: true,
+                code: { not: 'ENTERPRISE' }
+            },
+            select: {
+                id: true,
+                code: true,
+                name: true,
+                description: true
+            }
+        });
+    }
+
+    async getPositions() {
+        const users = await this.prisma.user.findMany({
+            where: {
+                position: { not: null, notIn: [''] },
+            },
+            select: {
+                position: true,
+            },
+            distinct: ['position'],
+        });
+        return users
+            .map((u) => u.position?.trim())
+            .filter((pos): pos is string => !!pos);
+    }
 }

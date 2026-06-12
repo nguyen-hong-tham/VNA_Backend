@@ -295,4 +295,26 @@ describe('User Management e2e Tests', () => {
       expect(res.status).toBe(201);
     });
   });
+
+  describe('GET /users/roles and GET /users/positions', () => {
+    it('Should fetch roles successfully and not contain ENTERPRISE', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/api/users/roles')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+      const hasEnterprise = res.body.some((r: any) => r.code === 'ENTERPRISE');
+      expect(hasEnterprise).toBe(false);
+    });
+
+    it('Should fetch positions successfully', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/api/users/positions')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body)).toBe(true);
+    });
+  });
 });
