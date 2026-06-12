@@ -53,7 +53,9 @@ export class EnterpriseService {
       const today = new Date();
       today.setHours(23, 59, 59, 999);
       if (issueDate > today) {
-        throw new BadRequestException('Ngày cấp giấy phép kinh doanh không được là ngày tương lai');
+        throw new BadRequestException(
+          'Ngày cấp giấy phép kinh doanh không được là ngày tương lai',
+        );
       }
     }
 
@@ -61,20 +63,27 @@ export class EnterpriseService {
     const taxCode = dto.taxCode.trim();
     const existingEnt = await this.enterpriseRepo.findByTaxCode(taxCode);
     if (existingEnt) {
-      throw new ConflictException('Mã số thuế này đã được đăng ký trong hệ thống');
+      throw new ConflictException(
+        'Mã số thuế này đã được đăng ký trong hệ thống',
+      );
     }
 
     // 2. Kiểm tra tài khoản đăng nhập (trùng với MST)
     const existingUser = await this.userRepo.findUniqueByUsername(taxCode);
     if (existingUser) {
-      throw new ConflictException('Tài khoản đăng nhập trùng với mã số thuế này đã tồn tại');
+      throw new ConflictException(
+        'Tài khoản đăng nhập trùng với mã số thuế này đã tồn tại',
+      );
     }
 
     // Kiểm tra duy nhất số giấy phép kinh doanh
     const licenseNum = dto.licenseNumber ? dto.licenseNumber.trim() : taxCode;
-    const existingLicense = await this.enterpriseRepo.findByLicenseNumber(licenseNum);
+    const existingLicense =
+      await this.enterpriseRepo.findByLicenseNumber(licenseNum);
     if (existingLicense) {
-      throw new ConflictException('Số giấy phép kinh doanh này đã tồn tại trong hệ thống');
+      throw new ConflictException(
+        'Số giấy phép kinh doanh này đã tồn tại trong hệ thống',
+      );
     }
 
     // Kiểm tra duy nhất email của doanh nghiệp
@@ -83,34 +92,48 @@ export class EnterpriseService {
       where: { email: cleanEmail },
     });
     if (existingEmail) {
-      throw new ConflictException('Email này đã được đăng ký cho một doanh nghiệp khác');
+      throw new ConflictException(
+        'Email này đã được sử dụng bởi một doanh nghiệp khác',
+      );
     }
 
     // Kiểm tra duy nhất email của người dùng
     const existingUserEmail = await this.userRepo.findUniqueByEmail(cleanEmail);
     if (existingUserEmail) {
-      throw new ConflictException('Email này đã được sử dụng bởi một tài khoản khác');
+      throw new ConflictException(
+        'Email này đã được sử dụng bởi một tài khoản khác',
+      );
     }
 
     // 3. Kiểm tra loại hình kinh doanh
-    const businessType = await this.businessTypeRepo.findById(dto.businessTypeId);
+    const businessType = await this.businessTypeRepo.findById(
+      dto.businessTypeId,
+    );
     if (!businessType) {
       throw new NotFoundException('Không tìm thấy loại hình kinh doanh');
     }
     if (!businessType.status) {
-      throw new BadRequestException('Loại hình kinh doanh này đang ngưng hoạt động');
+      throw new BadRequestException(
+        'Loại hình kinh doanh này đang ngưng hoạt động',
+      );
     }
 
     // 4. Kiểm tra ngành nghề kinh doanh
-    const businessField = await this.businessFieldRepo.findById(dto.businessFieldId);
+    const businessField = await this.businessFieldRepo.findById(
+      dto.businessFieldId,
+    );
     if (!businessField) {
       throw new NotFoundException('Không tìm thấy ngành nghề kinh doanh');
     }
     if (!businessField.status) {
-      throw new BadRequestException('Ngành nghề kinh doanh này đang ngưng hoạt động');
+      throw new BadRequestException(
+        'Ngành nghề kinh doanh này đang ngưng hoạt động',
+      );
     }
     if (businessField.level !== 4) {
-      throw new BadRequestException('Ngành nghề kinh doanh được chọn phải là cấp 4');
+      throw new BadRequestException(
+        'Ngành nghề kinh doanh được chọn phải là cấp 4',
+      );
     }
 
     // 5. Lấy vai trò ENTERPRISE
@@ -118,7 +141,9 @@ export class EnterpriseService {
       where: { code: 'ENTERPRISE' },
     });
     if (!role) {
-      throw new NotFoundException('Không tìm thấy vai trò ENTERPRISE trong hệ thống');
+      throw new NotFoundException(
+        'Không tìm thấy vai trò ENTERPRISE trong hệ thống',
+      );
     }
 
     // 6. Mã hóa mật khẩu mặc định (12345678)
@@ -141,19 +166,29 @@ export class EnterpriseService {
     const enterprisePayload = {
       taxCode,
       licenseNumber: dto.licenseNumber ? dto.licenseNumber.trim() : taxCode,
-      licenseIssueDate: dto.licenseIssueDate ? new Date(dto.licenseIssueDate) : null,
+      licenseIssueDate: dto.licenseIssueDate
+        ? new Date(dto.licenseIssueDate)
+        : null,
       name: dto.name.trim(),
       englishName: dto.englishName ? dto.englishName.trim() : null,
       businessTypeId: dto.businessTypeId,
       businessFieldId: dto.businessFieldId,
       provinceId: dto.provinceIdActivity || null,
       wardId: dto.wardIdActivity || null,
-      registeredAddress: dto.registeredAddress ? dto.registeredAddress.trim() : null,
-      operatingAddress: dto.operatingAddress ? dto.operatingAddress.trim() : null,
+      registeredAddress: dto.registeredAddress
+        ? dto.registeredAddress.trim()
+        : null,
+      operatingAddress: dto.operatingAddress
+        ? dto.operatingAddress.trim()
+        : null,
       email: dto.email.trim(),
       officePhone: dto.officePhone ? dto.officePhone.trim() : null,
-      representativeName: dto.representativeName ? dto.representativeName.trim() : null,
-      representativePhone: dto.representativePhone ? dto.representativePhone.trim() : null,
+      representativeName: dto.representativeName
+        ? dto.representativeName.trim()
+        : null,
+      representativePhone: dto.representativePhone
+        ? dto.representativePhone.trim()
+        : null,
       status: EnterpriseStatus.APPROVED,
     };
 
@@ -182,7 +217,9 @@ export class EnterpriseService {
       const today = new Date();
       today.setHours(23, 59, 59, 999);
       if (issueDate > today) {
-        throw new BadRequestException('Ngày cấp giấy phép kinh doanh không được là ngày tương lai');
+        throw new BadRequestException(
+          'Ngày cấp giấy phép kinh doanh không được là ngày tương lai',
+        );
       }
     }
 
@@ -198,7 +235,9 @@ export class EnterpriseService {
         throw new NotFoundException('Không tìm thấy loại hình kinh doanh');
       }
       if (!bt.status) {
-        throw new BadRequestException('Loại hình kinh doanh này đang ngưng hoạt động');
+        throw new BadRequestException(
+          'Loại hình kinh doanh này đang ngưng hoạt động',
+        );
       }
     }
 
@@ -209,10 +248,14 @@ export class EnterpriseService {
         throw new NotFoundException('Không tìm thấy ngành nghề kinh doanh');
       }
       if (!bf.status) {
-        throw new BadRequestException('Ngành nghề kinh doanh này đang ngưng hoạt động');
+        throw new BadRequestException(
+          'Ngành nghề kinh doanh này đang ngưng hoạt động',
+        );
       }
       if (bf.level !== 4) {
-        throw new BadRequestException('Ngành nghề kinh doanh được chọn phải là cấp 4');
+        throw new BadRequestException(
+          'Ngành nghề kinh doanh được chọn phải là cấp 4',
+        );
       }
     }
 
@@ -223,7 +266,9 @@ export class EnterpriseService {
         where: { licenseNumber: cleanLicense, id: { not: id } },
       });
       if (existingLicense) {
-        throw new ConflictException('Số giấy phép kinh doanh này đã tồn tại trong hệ thống');
+        throw new ConflictException(
+          'Số giấy phép kinh doanh này đã tồn tại trong hệ thống',
+        );
       }
     }
 
@@ -234,40 +279,74 @@ export class EnterpriseService {
         where: { email: cleanEmail, id: { not: id } },
       });
       if (existingEmail) {
-        throw new ConflictException('Email này đã được đăng ký cho một doanh nghiệp khác');
+        throw new ConflictException(
+          'Email này đã được sử dụng bởi một doanh nghiệp khác',
+        );
       }
       const existingUserEmail = await this.prisma.user.findFirst({
         where: { email: cleanEmail, enterpriseProfile: { id: { not: id } } },
       });
       if (existingUserEmail) {
-        throw new ConflictException('Email này đã được sử dụng bởi một tài khoản khác');
+        throw new ConflictException(
+          'Email này đã được sử dụng bởi một tài khoản khác',
+        );
       }
     }
 
     // Xây dựng payload cập nhật cho Enterprise
     const enterpriseUpdate: any = {};
     if (dto.name !== undefined) enterpriseUpdate.name = dto.name.trim();
-    if (dto.licenseNumber !== undefined) enterpriseUpdate.licenseNumber = dto.licenseNumber.trim();
-    if (dto.licenseIssueDate !== undefined) enterpriseUpdate.licenseIssueDate = dto.licenseIssueDate;
-    if (dto.businessTypeId !== undefined) enterpriseUpdate.businessTypeId = dto.businessTypeId;
-    if (dto.businessFieldId !== undefined) enterpriseUpdate.businessFieldId = dto.businessFieldId;
-    if (dto.provinceIdActivity !== undefined) enterpriseUpdate.provinceId = dto.provinceIdActivity;
-    if (dto.wardIdActivity !== undefined) enterpriseUpdate.wardId = dto.wardIdActivity;
-    if (dto.registeredAddress !== undefined) enterpriseUpdate.registeredAddress = dto.registeredAddress ? dto.registeredAddress.trim() : null;
-    if (dto.operatingAddress !== undefined) enterpriseUpdate.operatingAddress = dto.operatingAddress ? dto.operatingAddress.trim() : null;
-    if (dto.englishName !== undefined) enterpriseUpdate.englishName = dto.englishName ? dto.englishName.trim() : null;
+    if (dto.licenseNumber !== undefined)
+      enterpriseUpdate.licenseNumber = dto.licenseNumber.trim();
+    if (dto.licenseIssueDate !== undefined)
+      enterpriseUpdate.licenseIssueDate = dto.licenseIssueDate;
+    if (dto.businessTypeId !== undefined)
+      enterpriseUpdate.businessTypeId = dto.businessTypeId;
+    if (dto.businessFieldId !== undefined)
+      enterpriseUpdate.businessFieldId = dto.businessFieldId;
+    if (dto.provinceIdActivity !== undefined)
+      enterpriseUpdate.provinceId = dto.provinceIdActivity;
+    if (dto.wardIdActivity !== undefined)
+      enterpriseUpdate.wardId = dto.wardIdActivity;
+    if (dto.registeredAddress !== undefined)
+      enterpriseUpdate.registeredAddress = dto.registeredAddress
+        ? dto.registeredAddress.trim()
+        : null;
+    if (dto.operatingAddress !== undefined)
+      enterpriseUpdate.operatingAddress = dto.operatingAddress
+        ? dto.operatingAddress.trim()
+        : null;
+    if (dto.englishName !== undefined)
+      enterpriseUpdate.englishName = dto.englishName
+        ? dto.englishName.trim()
+        : null;
     if (dto.email !== undefined) enterpriseUpdate.email = dto.email.trim();
-    if (dto.officePhone !== undefined) enterpriseUpdate.officePhone = dto.officePhone ? dto.officePhone.trim() : null;
-    if (dto.representativeName !== undefined) enterpriseUpdate.representativeName = dto.representativeName ? dto.representativeName.trim() : null;
-    if (dto.representativePhone !== undefined) enterpriseUpdate.representativePhone = dto.representativePhone ? dto.representativePhone.trim() : null;
+    if (dto.officePhone !== undefined)
+      enterpriseUpdate.officePhone = dto.officePhone
+        ? dto.officePhone.trim()
+        : null;
+    if (dto.representativeName !== undefined)
+      enterpriseUpdate.representativeName = dto.representativeName
+        ? dto.representativeName.trim()
+        : null;
+    if (dto.representativePhone !== undefined)
+      enterpriseUpdate.representativePhone = dto.representativePhone
+        ? dto.representativePhone.trim()
+        : null;
 
     // Xây dựng cập nhật cho linked User (email / representativeName / ĐKKD address)
     const userUpdate: any = {};
-    if (dto.representativeName !== undefined) userUpdate.fullName = dto.representativeName ? dto.representativeName.trim() : null;
+    if (dto.representativeName !== undefined)
+      userUpdate.fullName = dto.representativeName
+        ? dto.representativeName.trim()
+        : null;
     if (dto.email !== undefined) userUpdate.email = dto.email.trim();
     if (dto.provinceId !== undefined) userUpdate.provinceId = dto.provinceId;
     if (dto.wardId !== undefined) userUpdate.wardId = dto.wardId;
-    if (dto.registeredAddress !== undefined) userUpdate.address = dto.registeredAddress ? dto.registeredAddress.trim() : null;
+    if (dto.registeredAddress !== undefined)
+      userUpdate.address = dto.registeredAddress
+        ? dto.registeredAddress.trim()
+        : null;
 
     // Tài liệu đính kèm
     const documentsPayload = dto.documents
@@ -288,7 +367,11 @@ export class EnterpriseService {
     });
   }
 
-  async updateStatus(id: number, status: EnterpriseStatus, approvedBy?: number) {
+  async updateStatus(
+    id: number,
+    status: EnterpriseStatus,
+    approvedBy?: number,
+  ) {
     const existing = await this.enterpriseRepo.findById(id);
     if (!existing) {
       throw new NotFoundException('Không tìm thấy thông tin doanh nghiệp');
@@ -303,7 +386,9 @@ export class EnterpriseService {
     }
 
     if (user.role.code !== 'ENTERPRISE') {
-      throw new BadRequestException('Tài khoản được chọn không thuộc vai trò doanh nghiệp');
+      throw new BadRequestException(
+        'Tài khoản được chọn không thuộc vai trò doanh nghiệp',
+      );
     }
 
     const passwordHash = await bcrypt.hash(dto.newPassword, 10);
@@ -338,7 +423,9 @@ export class EnterpriseService {
       });
 
       if (!role) {
-        throw new NotFoundException('Không tìm thấy vai trò ENTERPRISE trong hệ thống');
+        throw new NotFoundException(
+          'Không tìm thấy vai trò ENTERPRISE trong hệ thống',
+        );
       }
 
       const passwordHash = await bcrypt.hash('12345678', 10);
@@ -409,14 +496,26 @@ export class EnterpriseService {
           ].includes(k.toLowerCase().trim()),
         );
         const provinceKey = Object.keys(row).find((k) =>
-          ['tỉnh', 'thành phố', 'tinh', 'thanh pho', 'province', 'mã tỉnh', 'ma tinh'].includes(
-            k.toLowerCase().trim(),
-          ),
+          [
+            'tỉnh',
+            'thành phố',
+            'tinh',
+            'thanh pho',
+            'province',
+            'mã tỉnh',
+            'ma tinh',
+          ].includes(k.toLowerCase().trim()),
         );
         const wardKey = Object.keys(row).find((k) =>
-          ['phường', 'xã', 'phuong', 'xa', 'ward', 'mã phường', 'ma phuong'].includes(
-            k.toLowerCase().trim(),
-          ),
+          [
+            'phường',
+            'xã',
+            'phuong',
+            'xa',
+            'ward',
+            'mã phường',
+            'ma phuong',
+          ].includes(k.toLowerCase().trim()),
         );
         const regAddrKey = Object.keys(row).find((k) =>
           [
@@ -445,7 +544,9 @@ export class EnterpriseService {
           ].includes(k.toLowerCase().trim()),
         );
         const emailKey = Object.keys(row).find((k) =>
-          ['email', 'thư điện tử', 'thu dien tu'].includes(k.toLowerCase().trim()),
+          ['email', 'thư điện tử', 'thu dien tu'].includes(
+            k.toLowerCase().trim(),
+          ),
         );
         const officePhoneKey = Object.keys(row).find((k) =>
           [
@@ -476,7 +577,15 @@ export class EnterpriseService {
           ].includes(k.toLowerCase().trim()),
         );
 
-        if (!nameKey || !taxCodeKey || !btKey || !bfKey || !emailKey || !repNameKey || !regAddrKey) {
+        if (
+          !nameKey ||
+          !taxCodeKey ||
+          !btKey ||
+          !bfKey ||
+          !emailKey ||
+          !repNameKey ||
+          !regAddrKey
+        ) {
           errors.push(
             `Dòng ${rowIndex}: Thiếu thông tin cột bắt buộc (Tên, MST, Loại hình, Ngành nghề, Email, Người đứng đầu, Địa chỉ đăng ký).`,
           );
@@ -491,20 +600,34 @@ export class EnterpriseService {
         const representativeName = String(row[repNameKey] || '').trim();
         const registeredAddress = String(row[regAddrKey] || '').trim();
 
-        if (!name || !taxCode || !btRaw || !bfRaw || !email || !representativeName || !registeredAddress) {
-          errors.push(`Dòng ${rowIndex}: Dữ liệu bắt buộc không được để trống.`);
+        if (
+          !name ||
+          !taxCode ||
+          !btRaw ||
+          !bfRaw ||
+          !email ||
+          !representativeName ||
+          !registeredAddress
+        ) {
+          errors.push(
+            `Dòng ${rowIndex}: Dữ liệu bắt buộc không được để trống.`,
+          );
           continue;
         }
 
         // Kiểm tra định dạng MST (10 số)
         if (!/^\d{10}$/.test(taxCode)) {
-          errors.push(`Dòng ${rowIndex}: Mã số thuế "${taxCode}" không đúng định dạng 10 chữ số.`);
+          errors.push(
+            `Dòng ${rowIndex}: Mã số thuế "${taxCode}" không đúng định dạng 10 chữ số.`,
+          );
           continue;
         }
 
         // Kiểm tra email
         if (!email.includes('@')) {
-          errors.push(`Dòng ${rowIndex}: Email "${email}" không đúng định dạng.`);
+          errors.push(
+            `Dòng ${rowIndex}: Email "${email}" không đúng định dạng.`,
+          );
           continue;
         }
 
@@ -525,11 +648,15 @@ export class EnterpriseService {
             b.name.toLowerCase() === btRaw.toLowerCase(),
         );
         if (!businessType) {
-          errors.push(`Dòng ${rowIndex}: Không tìm thấy loại hình kinh doanh "${btRaw}".`);
+          errors.push(
+            `Dòng ${rowIndex}: Không tìm thấy loại hình kinh doanh "${btRaw}".`,
+          );
           continue;
         }
         if (!businessType.status) {
-          errors.push(`Dòng ${rowIndex}: Loại hình kinh doanh "${btRaw}" đang bị khóa.`);
+          errors.push(
+            `Dòng ${rowIndex}: Loại hình kinh doanh "${btRaw}" đang bị khóa.`,
+          );
           continue;
         }
 
@@ -550,12 +677,16 @@ export class EnterpriseService {
           continue;
         }
         if (!businessField.status) {
-          errors.push(`Dòng ${rowIndex}: Ngành nghề kinh doanh "${bfRaw}" đang bị khóa.`);
+          errors.push(
+            `Dòng ${rowIndex}: Ngành nghề kinh doanh "${bfRaw}" đang bị khóa.`,
+          );
           continue;
         }
 
         // Đọc các trường không bắt buộc khác
-        const licenseNumber = licenseKey ? String(row[licenseKey] || '').trim() : taxCode;
+        const licenseNumber = licenseKey
+          ? String(row[licenseKey] || '').trim()
+          : taxCode;
 
         // Xử lý ngày cấp giấy phép
         let licenseIssueDate: Date | null = null;
@@ -575,23 +706,34 @@ export class EnterpriseService {
           const today = new Date();
           today.setHours(23, 59, 59, 999);
           if (licenseIssueDate > today) {
-            errors.push(`Dòng ${rowIndex}: Ngày cấp giấy phép kinh doanh không được là ngày tương lai.`);
+            errors.push(
+              `Dòng ${rowIndex}: Ngày cấp giấy phép kinh doanh không được là ngày tương lai.`,
+            );
             continue;
           }
         }
 
         // Province & Ward
         const provinceId = provinceKey
-          ? parseInt(String(row[provinceKey] || '0').replace(/\D/g, ''), 10) || 79
+          ? parseInt(String(row[provinceKey] || '0').replace(/\D/g, ''), 10) ||
+            79
           : 79; // mặc định 79 (Hồ Chí Minh)
         const wardId = wardKey
           ? parseInt(String(row[wardKey] || '0').replace(/\D/g, ''), 10) || 1
           : 1;
 
-        const operatingAddress = optAddrKey ? String(row[optAddrKey] || '').trim() : null;
-        const englishName = engNameKey ? String(row[engNameKey] || '').trim() : null;
-        const officePhone = officePhoneKey ? String(row[officePhoneKey] || '').trim() : null;
-        const representativePhone = repPhoneKey ? String(row[repPhoneKey] || '').trim() : null;
+        const operatingAddress = optAddrKey
+          ? String(row[optAddrKey] || '').trim()
+          : null;
+        const englishName = engNameKey
+          ? String(row[engNameKey] || '').trim()
+          : null;
+        const officePhone = officePhoneKey
+          ? String(row[officePhoneKey] || '').trim()
+          : null;
+        const representativePhone = repPhoneKey
+          ? String(row[repPhoneKey] || '').trim()
+          : null;
 
         // Tạo tài khoản và doanh nghiệp
         const userPayload = {
