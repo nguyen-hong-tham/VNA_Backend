@@ -149,4 +149,16 @@ export class UserController {
   ) {
     return this.authService.changePassword(req.user.id, dto);
   }
+
+  // them api get permissions
+  @Get('me/permissions')
+  @ApiOperation({ summary: 'Lấy danh sách vai trò và quyền hạn của người dùng hiện tại' })
+  @ApiResponse({
+    status: 200,
+    description: "Trả về mã vai trò cùng danh sách quyền hạn chi tiết",
+
+  })
+  async getMyPermissions(@Req() req: AuthenticatedRequest) {
+    return this.authService.getUserPermissions(req.user.id);
+  }
 }

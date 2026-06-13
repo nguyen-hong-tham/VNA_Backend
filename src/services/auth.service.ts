@@ -149,7 +149,6 @@ export class AuthService {
 
     const updatedUser = await this.userRepository.update(userId, {
       fullName: dto.fullName !== undefined ? dto.fullName : undefined,
-      phone: dto.phone !== undefined ? dto.phone : undefined,
       birthDate:
         dto.birthDate !== undefined
           ? dto.birthDate
@@ -448,4 +447,46 @@ export class AuthService {
       message: 'Khôi phục mật khẩu thành công',
     };
   }
-}
+
+  // ------------------- thêm Permission 
+  async getUserPermissions(userId: number) {
+    // Lấy User kèm thông tin Role và RolePermission -> Permission
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        role: {
+          select: {
+            code: true,
+            name: true,
+            rolePermissions: {
+              select: {
+                permission: {
+                  select: {
+                    id: true,
+                    code: true,
+                    name: true,
+                    parentId: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException("Không tìm thấy người dùng");
+
+    }
+    const rawPermissions = user.role.rolePermissions.map((rp) => rp.permission);
+
+    return {
+      roleCode: user.role.code,
+      roleName: user.role.name,
+      permissions: rawPermissions
+
+    }
+
+  }
+} 

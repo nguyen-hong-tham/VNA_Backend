@@ -7,11 +7,6 @@ export class UpdateProfileDto {
   @IsString({ message: 'Họ tên phải là chuỗi ký tự' })
   fullName?: string;
 
-  @ApiProperty({ example: '0901234567', required: false })
-  @IsOptional()
-  @IsString({ message: 'Số điện thoại phải là chuỗi ký tự' })
-  phone?: string;
-
   @ApiProperty({ example: '1990-01-01', required: false })
   @IsOptional()
   @IsDateString({}, { message: 'Ngày sinh không đúng định dạng YYYY-MM-DD' })

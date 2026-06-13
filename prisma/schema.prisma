@@ -108,7 +108,6 @@ model User {
   passwordHash String    @map("password_hash") @db.VarChar(255)
   fullName     String?   @map("full_name") @db.VarChar(255)
   email        String?   @unique @db.VarChar(255)
-  phone        String?   @db.VarChar(20)
   birthDate    DateTime? @map("birth_date") @db.Date
   gender       String?   @db.VarChar(20)
   position     String?   @db.VarChar(255)
