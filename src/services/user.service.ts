@@ -14,13 +14,25 @@ export class UserService {
         private readonly prisma: PrismaService,
     ) { }
 
+
+    private formatUserResponse(user: any) {
+        if (!user) return null;
+        const { passwordHash, ...result } = user;
+        if (result.birthDate && result.birthDate instanceof Date) {
+            result.birthDate = result.birthDate.toISOString().split('T')[0];
+        }
+        return result;
+    }
+
+
     async getUser(query: QueryUserDto) {
         const users = await this.userRepository.findAll(query);
         const total = await this.userRepository.countAll(query);
         const limit = query.limit || 10;
         const page = query.page || 1;
+        const formattedUsers = users.map(user => this.formatUserResponse(user));
         return {
-            data: users,
+            data: formattedUsers,
             total,
             page,
             limit,
@@ -84,7 +96,7 @@ export class UserService {
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(defaultPassword, salt);
 
-        return this.userRepository.create({
+        const newUser = await this.userRepository.create({
             username,
             passwordHash,
             fullName: dto.fullName,
@@ -99,6 +111,15 @@ export class UserService {
             address: dto.address,
             avatarUrl: dto.avatarUrl,
         });
+        return this.formatUserResponse(newUser);
+    }
+
+    async getUserById(id: number) {
+        const user = await this.userRepository.findUniqueById(id);
+        if (!user) {
+            throw new NotFoundException('Không tìm thấy người dùng');
+        }
+        return this.formatUserResponse(user);
     }
 
     async updateUser(userId: number, dto: UpdateUserDto) {
@@ -163,7 +184,7 @@ export class UserService {
             }
         }
 
-        return this.userRepository.update(userId, {
+        const updateUser = await this.userRepository.update(userId, {
             fullName: dto.fullName,
             email,
             role: dto.roleId ? { connect: { id: dto.roleId } } : undefined,
@@ -176,6 +197,7 @@ export class UserService {
             address: dto.address,
             avatarUrl: dto.avatarUrl,
         });
+        return this.formatUserResponse(updateUser);
     }
 
     async updateStatus(userId: number, isActive: boolean) {
@@ -183,7 +205,8 @@ export class UserService {
         if (!user) {
             throw new NotFoundException('Không tìm thấy người dùng');
         }
-        return this.userRepository.update(userId, { isActive });
+        const updatedUser = await this.userRepository.update(userId, { isActive });
+        return this.formatUserResponse(updatedUser);
     }
 
     async bulkDelete(ids: number[]) {
@@ -401,5 +424,35 @@ export class UserService {
         } catch (e: any) {
             throw new BadRequestException(`Lỗi khi đọc file Excel: ${e.message}`);
         }
+    }
+
+    async getRoles() {
+        return this.prisma.role.findMany({
+            where: {
+                isActive: true,
+                code: { not: 'ENTERPRISE' }
+            },
+            select: {
+                id: true,
+                code: true,
+                name: true,
+                description: true
+            }
+        });
+    }
+
+    async getPositions() {
+        const users = await this.prisma.user.findMany({
+            where: {
+                position: { not: null, notIn: [''] },
+            },
+            select: {
+                position: true,
+            },
+            distinct: ['position'],
+        });
+        return users
+            .map((u) => u.position?.trim())
+            .filter((pos): pos is string => !!pos);
     }
 }

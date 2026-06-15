@@ -14,25 +14,25 @@ async function main() {
   // ==================================================
   const adminRole = await prisma.role.upsert({
     where: { code: 'ADMIN' },
-    update: {},
+    update: { name: 'Quản trị viên' },
     create: { code: 'ADMIN', name: 'Quản trị viên' },
   });
 
   const managerRole = await prisma.role.upsert({
     where: { code: 'MANAGER' },
-    update: {},
+    update: { name: 'Quản lý' },
     create: { code: 'MANAGER', name: 'Quản lý' },
   });
 
   const staffRole = await prisma.role.upsert({
     where: { code: 'STAFF' },
-    update: {},
+    update: { name: 'Nhân viên nghiệp vụ' },
     create: { code: 'STAFF', name: 'Nhân viên nghiệp vụ' },
   });
 
   const enterpriseRole = await prisma.role.upsert({
     where: { code: 'ENTERPRISE' },
-    update: {},
+    update: { name: 'Doanh nghiệp' },
     create: { code: 'ENTERPRISE', name: 'Doanh nghiệp' },
   });
 
@@ -455,7 +455,7 @@ async function main() {
     categories.find((c) => c?.type === type && c?.code === code) ?? null;
 
   // ==================================================
-  // USERS (10 records: 1 admin + 9 enterprise users)
+  // USERS (15 records: 1 admin + 2 managers + 3 staff + 9 enterprise users)
   // ==================================================
   const admin = await prisma.user.upsert({
     where: { username: 'admin' },
@@ -468,6 +468,42 @@ async function main() {
       roleId: adminRole.id,
     },
   });
+
+  const managerUsersData = [
+    {
+      username: 'manager01',
+      email: 'manager01@example.com',
+      fullName: 'Trần Văn Quản Lý 01',
+      position: 'Trưởng phòng',
+    },
+    {
+      username: 'manager02',
+      email: 'manager02@example.com',
+      fullName: 'Lê Thị Quản Lý 02',
+      position: 'Phó trưởng phòng',
+    },
+  ];
+
+  const staffUsersData = [
+    {
+      username: 'staff01',
+      email: 'staff01@example.com',
+      fullName: 'Nguyễn Văn Nhân Viên 01',
+      position: 'Chuyên viên',
+    },
+    {
+      username: 'staff02',
+      email: 'staff02@example.com',
+      fullName: 'Trần Thị Nhân Viên 02',
+      position: 'Kế toán viên',
+    },
+    {
+      username: 'staff03',
+      email: 'staff03@example.com',
+      fullName: 'Lê Văn Nhân Viên 03',
+      position: 'Thanh tra viên',
+    },
+  ];
 
   const enterpriseUsersData = [
     {
@@ -516,6 +552,26 @@ async function main() {
       fullName: 'Ngô Văn I',
     },
   ];
+
+  const managerUsers = await Promise.all(
+    managerUsersData.map((u) =>
+      prisma.user.upsert({
+        where: { username: u.username },
+        update: { position: u.position },
+        create: { ...u, passwordHash, roleId: managerRole.id },
+      }),
+    ),
+  );
+
+  const staffUsers = await Promise.all(
+    staffUsersData.map((u) =>
+      prisma.user.upsert({
+        where: { username: u.username },
+        update: { position: u.position },
+        create: { ...u, passwordHash, roleId: staffRole.id },
+      }),
+    ),
+  );
 
   const enterpriseUsers = await Promise.all(
     enterpriseUsersData.map((u) =>
@@ -872,7 +928,7 @@ async function main() {
   console.log(`   BusinessTypes: ${businessTypes.length}`);
   console.log(`   BusinessFields: ${businessFieldsData.length}`);
   console.log(`   Categories: ${categoryData.length} (across 4 types)`);
-  console.log(`   Users: ${enterpriseUsers.length + 1}`);
+  console.log(`   Users: ${enterpriseUsers.length + managerUsers.length + staffUsers.length + 1}`);
   console.log(`   Enterprises: ${enterprises.length}`);
   console.log(`   EnterpriseDocuments: ${enterprises.length}`);
   console.log(`   ReportPeriods: ${reportPeriods.length}`);

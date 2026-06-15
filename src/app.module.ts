@@ -6,6 +6,7 @@ import { PassportModule } from '@nestjs/passport';
 // Controllers
 import { AuthController } from './controllers/auth.controller';
 import { UserController } from './controllers/user.controller';
+import { UserManagementController } from './controllers/user-management.controller';
 import { BusinessTypeController } from './controllers/business-type.controller';
 import { BusinessFieldController } from './controllers/business-field.controller';
 import { EnterpriseController } from './controllers/enterprise.controller';
@@ -42,6 +43,7 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
   controllers: [
     AuthController,
     UserController,
+    UserManagementController,
     BusinessTypeController,
     BusinessFieldController,
     EnterpriseController,
