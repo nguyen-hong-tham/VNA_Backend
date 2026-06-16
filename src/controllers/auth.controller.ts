@@ -14,6 +14,7 @@ import { AuthService } from '../services/auth.service';
 import { LoginDto } from '../dto/login.dto';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
+
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
@@ -55,8 +56,9 @@ export class AuthController {
 
     return {
       message: result.message,
-      user: result.user,
+      // user: result.user,
       accessToken: result.accessToken,
+      role: result.role,
     };
   }
 

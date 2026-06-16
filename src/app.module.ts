@@ -10,6 +10,7 @@ import { UserManagementController } from './controllers/user-management.controll
 import { BusinessTypeController } from './controllers/business-type.controller';
 import { BusinessFieldController } from './controllers/business-field.controller';
 import { EnterpriseController } from './controllers/enterprise.controller';
+import { EnterpriseRegistrationController } from './controllers/enterprise-registration.controller';
 
 // Services
 import { AuthService } from './services/auth.service';
@@ -19,6 +20,7 @@ import { BusinessTypeService } from './services/business-type.service';
 import { BusinessFieldService } from './services/business-field.service';
 import { EnterpriseService } from './services/enterprise.service';
 import { UserService } from './services/user.service';
+import { EnterpriseRegistrationService } from './services/enterprise-registration.service';
 
 // Repositories
 import { PrismaService } from './repositories/prisma.service';
@@ -47,9 +49,11 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
     BusinessTypeController,
     BusinessFieldController,
     EnterpriseController,
+    EnterpriseRegistrationController,
   ],
   providers: [
     AuthService,
+    EnterpriseRegistrationService,
     MailService,
     SupabaseService,
     BusinessTypeService,
@@ -67,4 +71,3 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
   ],
 })
 export class AppModule {}
-

@@ -126,6 +126,7 @@ model User {
   role                Role             @relation(fields: [roleId], references: [id], map: "fk_user_role")
   passwordResets      PasswordReset[]
   emailChangeOtps     EmailChangeOtp[]
+  registerOtps        RegisterOtp[]
   enterpriseProfile   Enterprise?      @relation("EnterpriseUser")
   approvedEnterprises Enterprise[]     @relation("EnterpriseApprovedBy")
   createdReports      Report[]         @relation("ReportCreatedBy")
@@ -366,4 +367,18 @@ model ReportAccidentCase {
   occupation    Category?     @relation("CaseOccupation", fields: [occupationId], references: [id], map: "fk_case_occupation")
 
   @@map("report_accident_cases")
+}
+
+model RegisterOtp {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @map("user_id")
+  otp          String   @db.Char(6)
+  expiresAt    DateTime @map("expires_at")
+  attemptCount Int      @default(0) @map("attempt_count")
+  isVerified   Boolean  @default(false) @map("is_verified")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_register_otp_user")
+
+  @@map("register_otps")
 }

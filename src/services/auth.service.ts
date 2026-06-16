@@ -92,7 +92,8 @@ export class AuthService {
       message: 'Đăng nhập thành công',
       accessToken,
       refreshToken,
-      user: this.formatUserResponse(user),
+      role: user.role.code,
+      // user: this.formatUserResponse(user),
     };
   }
 
@@ -448,7 +449,7 @@ export class AuthService {
     };
   }
 
-  // ------------------- thêm Permission 
+  // ------------------- thêm Permission
   async getUserPermissions(userId: number) {
     // Lấy User kèm thông tin Role và RolePermission -> Permission
     const user = await this.prisma.user.findUnique({
