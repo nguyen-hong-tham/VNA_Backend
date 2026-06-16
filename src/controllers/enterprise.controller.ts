@@ -31,8 +31,12 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { EnterpriseService } from '../services/enterprise.service';
 import { SupabaseService } from '../services/supabase.service';
 import { CreateEnterpriseDto } from '../dto/create-enterprise.dto';
-import { UpdateEnterpriseDto, UpdateEnterpriseStatusDto } from '../dto/update-enterprise.dto';
+import {
+  UpdateEnterpriseDto,
+  UpdateEnterpriseStatusDto,
+} from '../dto/update-enterprise.dto';
 import { ChangeEnterprisePasswordDto } from '../dto/change-enterprise-password.dto';
+import { ConfirmImportDto } from '../dto/confirm-import.dto';
 
 @ApiTags('Enterprises')
 @Controller('enterprises')
@@ -46,13 +50,47 @@ export class EnterpriseController {
 
   @Get()
   @ApiOperation({ summary: 'Lấy danh sách doanh nghiệp (phân trang + lọc)' })
-  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Trang hiện tại (mặc định: 1)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Số bản ghi trên mỗi trang (mặc định: 10)' })
-  @ApiQuery({ name: 'search', required: false, description: 'Tìm kiếm theo tên hoặc mã số thuế' })
-  @ApiQuery({ name: 'businessTypeId', required: false, type: Number, description: 'Lọc theo ID loại hình kinh doanh' })
-  @ApiQuery({ name: 'businessFieldId', required: false, type: Number, description: 'Lọc theo ID ngành nghề kinh doanh (cấp 4)' })
-  @ApiQuery({ name: 'wardId', required: false, type: Number, description: 'Lọc theo ID phường/xã đăng ký' })
-  @ApiQuery({ name: 'status', required: false, enum: EnterpriseStatus, description: 'Lọc theo trạng thái doanh nghiệp' })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Trang hiện tại (mặc định: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Số bản ghi trên mỗi trang (mặc định: 10)',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Tìm kiếm theo tên hoặc mã số thuế',
+  })
+  @ApiQuery({
+    name: 'businessTypeId',
+    required: false,
+    type: Number,
+    description: 'Lọc theo ID loại hình kinh doanh',
+  })
+  @ApiQuery({
+    name: 'businessFieldId',
+    required: false,
+    type: Number,
+    description: 'Lọc theo ID ngành nghề kinh doanh (cấp 4)',
+  })
+  @ApiQuery({
+    name: 'wardId',
+    required: false,
+    type: Number,
+    description: 'Lọc theo ID phường/xã đăng ký',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: EnterpriseStatus,
+    description: 'Lọc theo trạng thái doanh nghiệp',
+  })
   @ApiResponse({ status: 200, description: 'Lấy danh sách thành công' })
   async findAll(
     @Query('page') page?: string,
@@ -65,8 +103,12 @@ export class EnterpriseController {
   ) {
     const pageNum = parseInt(page || '1', 10) || 1;
     const limitNum = parseInt(limit || '10', 10) || 10;
-    const btId = businessTypeId ? parseInt(businessTypeId, 10) || undefined : undefined;
-    const bfId = businessFieldId ? parseInt(businessFieldId, 10) || undefined : undefined;
+    const btId = businessTypeId
+      ? parseInt(businessTypeId, 10) || undefined
+      : undefined;
+    const bfId = businessFieldId
+      ? parseInt(businessFieldId, 10) || undefined
+      : undefined;
     const wId = wardId ? parseInt(wardId, 10) || undefined : undefined;
 
     return this.enterpriseService.findAll(
@@ -90,7 +132,9 @@ export class EnterpriseController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Thêm mới doanh nghiệp (đồng thời tạo tài khoản đăng nhập)' })
+  @ApiOperation({
+    summary: 'Thêm mới doanh nghiệp (đồng thời tạo tài khoản đăng nhập)',
+  })
   @ApiResponse({ status: 201, description: 'Thêm mới thành công' })
   @ApiResponse({ status: 400, description: 'Dữ liệu đầu vào không hợp lệ' })
   @ApiResponse({ status: 409, description: 'Mã số thuế đã tồn tại' })
@@ -99,7 +143,9 @@ export class EnterpriseController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Chỉnh sửa thông tin doanh nghiệp (không cho sửa mã số thuế)' })
+  @ApiOperation({
+    summary: 'Chỉnh sửa thông tin doanh nghiệp (không cho sửa mã số thuế)',
+  })
   @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy doanh nghiệp' })
   async update(
@@ -125,16 +171,25 @@ export class EnterpriseController {
   @Post('change-password')
   @ApiOperation({ summary: 'Đổi mật khẩu tài khoản doanh nghiệp từ phía sở' })
   @ApiResponse({ status: 200, description: 'Đổi mật khẩu thành công' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy tài khoản doanh nghiệp' })
+  @ApiResponse({
+    status: 404,
+    description: 'Không tìm thấy tài khoản doanh nghiệp',
+  })
   async changePassword(@Body() dto: ChangeEnterprisePasswordDto) {
     return this.enterpriseService.changePassword(dto);
   }
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
-  @ApiOperation({ summary: 'Tải file tài liệu đính kèm lên Supabase Storage (PDF, Word, Ảnh)' })
+  @ApiOperation({
+    summary: 'Tải file tài liệu đính kèm lên Supabase Storage (PDF, Word, Ảnh)',
+  })
   @ApiConsumes('multipart/form-data')
-  @ApiQuery({ name: 'taxCode', required: false, description: 'Mã số thuế của doanh nghiệp để lưu vào thư mục riêng biệt' })
+  @ApiQuery({
+    name: 'taxCode',
+    required: false,
+    description: 'Mã số thuế của doanh nghiệp để lưu vào thư mục riêng biệt',
+  })
   @ApiBody({
     schema: {
       type: 'object',
@@ -169,19 +224,28 @@ export class EnterpriseController {
 
   @Delete('upload')
   @ApiOperation({ summary: 'Xóa file đính kèm khỏi Supabase Storage' })
-  @ApiQuery({ name: 'filePath', required: true, description: 'Đường dẫn đầy đủ của file cần xóa' })
+  @ApiQuery({
+    name: 'filePath',
+    required: true,
+    description: 'Đường dẫn đầy đủ của file cần xóa',
+  })
   @ApiResponse({ status: 200, description: 'Xóa file thành công' })
   async deleteFile(@Query('filePath') filePath: string) {
     if (!filePath) {
-      throw new BadRequestException('Vui lòng cung cấp đường dẫn filePath của file cần xóa');
+      throw new BadRequestException(
+        'Vui lòng cung cấp đường dẫn filePath của file cần xóa',
+      );
     }
     await this.supabaseService.deleteFile(filePath);
     return { message: 'Đã xóa file đính kèm khỏi Supabase Storage thành công' };
   }
 
-  @Post('import')
+  @Post('import-preview')
   @UseInterceptors(FileInterceptor('file'))
-  @ApiOperation({ summary: 'Nhập danh sách doanh nghiệp từ file Excel (.xlsx, .xls)' })
+  @ApiOperation({
+    summary:
+      'Xem trước và kiểm tra (validate) danh sách doanh nghiệp từ file Excel (chưa lưu DB)',
+  })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -190,14 +254,15 @@ export class EnterpriseController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'File Excel chứa dữ liệu doanh nghiệp cần import',
+          description:
+            'File Excel chứa dữ liệu doanh nghiệp cần review trước khi import',
         },
       },
       required: ['file'],
     },
   })
-  @ApiResponse({ status: 201, description: 'Import dữ liệu thành công' })
-  async importFromFile(
+  @ApiResponse({ status: 200, description: 'Kiểm tra dữ liệu thành công' })
+  async importPreview(
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -211,11 +276,23 @@ export class EnterpriseController {
     )
     file: Express.Multer.File,
   ) {
-    return this.enterpriseService.importFromFile(file);
+    return this.enterpriseService.importPreview(file);
+  }
+
+  @Post('import-confirm')
+  @ApiOperation({
+    summary: 'Xác nhận lưu danh sách doanh nghiệp đã được review hợp lệ vào DB',
+  })
+  @ApiResponse({ status: 201, description: 'Lưu dữ liệu thành công' })
+  async importConfirm(@Body() dto: ConfirmImportDto) {
+    return this.enterpriseService.importConfirm(dto);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Xóa doanh nghiệp (đồng thời xóa tài khoản người dùng, báo cáo và tài liệu liên quan)' })
+  @ApiOperation({
+    summary:
+      'Xóa doanh nghiệp (đồng thời xóa tài khoản người dùng, báo cáo và tài liệu liên quan)',
+  })
   @ApiResponse({ status: 200, description: 'Xóa doanh nghiệp thành công' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy doanh nghiệp' })
   async delete(@Param('id', ParseIntPipe) id: number) {
