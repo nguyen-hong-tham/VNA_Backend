@@ -79,10 +79,12 @@ export class CreateEnterpriseDto {
 
   @ApiProperty({
     example: '0312345678',
-    description: 'Mã số thuế doanh nghiệp (đúng 10 chữ số)',
+    description: 'Mã số thuế doanh nghiệp (từ 10 đến 15 chữ số)',
   })
   @IsNotEmpty({ message: 'Mã số thuế không được để trống' })
-  @Matches(/^\d{10}$/, { message: 'Mã số thuế phải bao gồm đúng 10 chữ số' })
+  @Matches(/^\d{10,15}$/, {
+    message: 'Mã số thuế phải bao gồm từ 10 đến 15 chữ số',
+  })
   taxCode: string;
 
   @ApiProperty({

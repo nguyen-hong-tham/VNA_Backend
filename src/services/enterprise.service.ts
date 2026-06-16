@@ -15,6 +15,7 @@ import { PrismaService } from '../repositories/prisma.service';
 import { CreateEnterpriseDto } from '../dto/create-enterprise.dto';
 import { UpdateEnterpriseDto } from '../dto/update-enterprise.dto';
 import { ChangeEnterprisePasswordDto } from '../dto/change-enterprise-password.dto';
+import { ConfirmImportDto } from '../dto/confirm-import.dto';
 
 @Injectable()
 export class EnterpriseService {
@@ -400,7 +401,7 @@ export class EnterpriseService {
     };
   }
 
-  async importFromFile(file: Express.Multer.File) {
+  async importPreview(file: Express.Multer.File) {
     if (!file || !file.buffer) {
       throw new BadRequestException('Vui lòng chọn file tải lên');
     }
@@ -428,14 +429,19 @@ export class EnterpriseService {
         );
       }
 
-      const passwordHash = await bcrypt.hash('12345678', 10);
-
-      let successCount = 0;
-      const errors: string[] = [];
+      let validCount = 0;
+      let invalidCount = 0;
+      const results: {
+        rowNumber: number;
+        isValid: boolean;
+        errors: string[];
+        data: any | null;
+      }[] = [];
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         const rowIndex = i + 2; // Dòng thực tế trong excel (bỏ qua header)
+        const rowErrors: string[] = [];
 
         // Phân tích header linh hoạt
         const nameKey = Object.keys(row).find((k) =>
@@ -586,9 +592,16 @@ export class EnterpriseService {
           !repNameKey ||
           !regAddrKey
         ) {
-          errors.push(
-            `Dòng ${rowIndex}: Thiếu thông tin cột bắt buộc (Tên, MST, Loại hình, Ngành nghề, Email, Người đứng đầu, Địa chỉ đăng ký).`,
+          rowErrors.push(
+            'Thiếu thông tin cột bắt buộc (Tên, MST, Loại hình, Ngành nghề, Email, Người đứng đầu, Địa chỉ đăng ký).',
           );
+          invalidCount++;
+          results.push({
+            rowNumber: rowIndex,
+            isValid: false,
+            errors: rowErrors,
+            data: null,
+          });
           continue;
         }
 
@@ -609,78 +622,66 @@ export class EnterpriseService {
           !representativeName ||
           !registeredAddress
         ) {
-          errors.push(
-            `Dòng ${rowIndex}: Dữ liệu bắt buộc không được để trống.`,
-          );
-          continue;
+          rowErrors.push('Dữ liệu bắt buộc không được để trống.');
         }
 
-        // Kiểm tra định dạng MST (10 số)
-        if (!/^\d{10}$/.test(taxCode)) {
-          errors.push(
-            `Dòng ${rowIndex}: Mã số thuế "${taxCode}" không đúng định dạng 10 chữ số.`,
+        // Kiểm tra định dạng MST (10 đến 15 số)
+        if (taxCode && !/^\d{10,15}$/.test(taxCode)) {
+          rowErrors.push(
+            `Mã số thuế "${taxCode}" không đúng định dạng 10 đến 15 chữ số.`,
           );
-          continue;
         }
 
         // Kiểm tra email
-        if (!email.includes('@')) {
-          errors.push(
-            `Dòng ${rowIndex}: Email "${email}" không đúng định dạng.`,
-          );
-          continue;
+        if (email && !email.includes('@')) {
+          rowErrors.push(`Email "${email}" không đúng định dạng.`);
         }
 
         // Kiểm tra trùng lặp MST
-        const dupEnt = await this.enterpriseRepo.findByTaxCode(taxCode);
-        const dupUser = await this.userRepo.findUniqueByUsername(taxCode);
-        if (dupEnt || dupUser) {
-          errors.push(
-            `Dòng ${rowIndex}: Doanh nghiệp hoặc tài khoản với MST "${taxCode}" đã tồn tại trong hệ thống.`,
-          );
-          continue;
+        if (taxCode && /^\d{10,15}$/.test(taxCode)) {
+          const dupEnt = await this.enterpriseRepo.findByTaxCode(taxCode);
+          const dupUser = await this.userRepo.findUniqueByUsername(taxCode);
+          if (dupEnt || dupUser) {
+            rowErrors.push(
+              `Doanh nghiệp hoặc tài khoản với MST "${taxCode}" đã tồn tại trong hệ thống.`,
+            );
+          }
         }
 
         // Kiểm tra loại hình kinh doanh
-        const businessType = businessTypes.find(
-          (b) =>
-            b.code.toLowerCase() === btRaw.toLowerCase() ||
-            b.name.toLowerCase() === btRaw.toLowerCase(),
-        );
-        if (!businessType) {
-          errors.push(
-            `Dòng ${rowIndex}: Không tìm thấy loại hình kinh doanh "${btRaw}".`,
+        let businessType: any = null;
+        if (btRaw) {
+          businessType = businessTypes.find(
+            (b) =>
+              b.code.toLowerCase() === btRaw.toLowerCase() ||
+              b.name.toLowerCase() === btRaw.toLowerCase(),
           );
-          continue;
-        }
-        if (!businessType.status) {
-          errors.push(
-            `Dòng ${rowIndex}: Loại hình kinh doanh "${btRaw}" đang bị khóa.`,
-          );
-          continue;
+          if (!businessType) {
+            rowErrors.push(`Không tìm thấy loại hình kinh doanh "${btRaw}".`);
+          } else if (!businessType.status) {
+            rowErrors.push(`Loại hình kinh doanh "${btRaw}" đang bị khóa.`);
+          }
         }
 
         // Kiểm tra ngành nghề kinh doanh cấp 4
-        let bfCode = bfRaw;
-        if (/^\d+$/.test(bfCode)) {
-          bfCode = bfCode.padStart(4, '0');
-        }
-        const businessField = businessFields.find(
-          (f) =>
-            f.code.toLowerCase() === bfCode.toLowerCase() ||
-            f.name.toLowerCase() === bfRaw.toLowerCase(),
-        );
-        if (!businessField) {
-          errors.push(
-            `Dòng ${rowIndex}: Không tìm thấy ngành nghề kinh doanh cấp 4 "${bfRaw}".`,
+        let businessField: any = null;
+        if (bfRaw) {
+          let bfCode = bfRaw;
+          if (/^\d+$/.test(bfCode)) {
+            bfCode = bfCode.padStart(4, '0');
+          }
+          businessField = businessFields.find(
+            (f) =>
+              f.code.toLowerCase() === bfCode.toLowerCase() ||
+              f.name.toLowerCase() === bfRaw.toLowerCase(),
           );
-          continue;
-        }
-        if (!businessField.status) {
-          errors.push(
-            `Dòng ${rowIndex}: Ngành nghề kinh doanh "${bfRaw}" đang bị khóa.`,
-          );
-          continue;
+          if (!businessField) {
+            rowErrors.push(
+              `Không tìm thấy ngành nghề kinh doanh cấp 4 "${bfRaw}".`,
+            );
+          } else if (!businessField.status) {
+            rowErrors.push(`Ngành nghề kinh doanh "${bfRaw}" đang bị khóa.`);
+          }
         }
 
         // Đọc các trường không bắt buộc khác
@@ -706,10 +707,9 @@ export class EnterpriseService {
           const today = new Date();
           today.setHours(23, 59, 59, 999);
           if (licenseIssueDate > today) {
-            errors.push(
-              `Dòng ${rowIndex}: Ngày cấp giấy phép kinh doanh không được là ngày tương lai.`,
+            rowErrors.push(
+              'Ngày cấp giấy phép kinh doanh không được là ngày tương lai.',
             );
-            continue;
           }
         }
 
@@ -717,7 +717,7 @@ export class EnterpriseService {
         const provinceId = provinceKey
           ? parseInt(String(row[provinceKey] || '0').replace(/\D/g, ''), 10) ||
             79
-          : 79; // mặc định 79 (Hồ Chí Minh)
+          : 79;
         const wardId = wardKey
           ? parseInt(String(row[wardKey] || '0').replace(/\D/g, ''), 10) || 1
           : 1;
@@ -735,47 +735,46 @@ export class EnterpriseService {
           ? String(row[repPhoneKey] || '').trim()
           : null;
 
-        // Tạo tài khoản và doanh nghiệp
-        const userPayload = {
-          username: taxCode,
-          passwordHash,
-          fullName: representativeName,
-          email,
-          roleId: role.id,
-          isActive: true,
-        };
-
-        const enterprisePayload = {
-          taxCode,
-          licenseNumber,
-          licenseIssueDate,
-          name,
-          englishName,
-          businessTypeId: businessType.id,
-          businessFieldId: businessField.id,
-          provinceId,
-          wardId,
-          registeredAddress,
-          operatingAddress,
-          email,
-          officePhone,
-          representativeName,
-          representativePhone,
-          status: EnterpriseStatus.APPROVED,
-        };
-
-        await this.enterpriseRepo.create({
-          enterprise: enterprisePayload,
-          user: userPayload,
-        });
-
-        successCount++;
+        if (rowErrors.length > 0) {
+          invalidCount++;
+          results.push({
+            rowNumber: rowIndex,
+            isValid: false,
+            errors: rowErrors,
+            data: null,
+          });
+        } else {
+          validCount++;
+          results.push({
+            rowNumber: rowIndex,
+            isValid: true,
+            errors: [],
+            data: {
+              name,
+              taxCode,
+              licenseNumber,
+              licenseIssueDate,
+              businessTypeId: businessType.id,
+              businessFieldId: businessField.id,
+              provinceId,
+              wardId,
+              registeredAddress,
+              operatingAddress,
+              englishName,
+              email,
+              officePhone,
+              representativeName,
+              representativePhone,
+            },
+          });
+        }
       }
 
       return {
-        message: `Nhập dữ liệu thành công ${successCount} doanh nghiệp từ file`,
-        importedCount: successCount,
-        errors: errors.length > 0 ? errors : undefined,
+        totalRows: rows.length,
+        validCount,
+        invalidCount,
+        results,
       };
     } catch (e: any) {
       if (
@@ -787,6 +786,102 @@ export class EnterpriseService {
       }
       throw new BadRequestException(`Lỗi khi xử lý file Excel: ${e.message}`);
     }
+  }
+
+  async importConfirm(dto: ConfirmImportDto) {
+    const role = await this.prisma.role.findUnique({
+      where: { code: 'ENTERPRISE' },
+    });
+    if (!role) {
+      throw new NotFoundException(
+        'Không tìm thấy vai trò ENTERPRISE trong hệ thống',
+      );
+    }
+    const passwordHash = await bcrypt.hash('12345678', 10);
+    let successCount = 0;
+    const errors: string[] = [];
+
+    for (const ent of dto.enterprises) {
+      try {
+        const taxCode = ent.taxCode.trim();
+
+        // Kiểm tra trùng MST
+        const dupEnt = await this.enterpriseRepo.findByTaxCode(taxCode);
+        const dupUser = await this.userRepo.findUniqueByUsername(taxCode);
+        if (dupEnt || dupUser) {
+          errors.push(
+            `Doanh nghiệp hoặc tài khoản với MST "${taxCode}" đã tồn tại trong hệ thống.`,
+          );
+          continue;
+        }
+
+        // Kiểm tra trùng email
+        const cleanEmail = ent.email.trim();
+        const existingEmail = await this.prisma.enterprise.findUnique({
+          where: { email: cleanEmail },
+        });
+        const existingUserEmail =
+          await this.userRepo.findUniqueByEmail(cleanEmail);
+        if (existingEmail || existingUserEmail) {
+          errors.push(`Email "${cleanEmail}" đã tồn tại trong hệ thống.`);
+          continue;
+        }
+
+        const userPayload = {
+          username: taxCode,
+          passwordHash,
+          fullName: ent.representativeName
+            ? ent.representativeName.trim()
+            : null,
+          email: cleanEmail,
+          roleId: role.id,
+          isActive: true,
+        };
+
+        const enterprisePayload = {
+          taxCode,
+          licenseNumber: ent.licenseNumber ? ent.licenseNumber.trim() : taxCode,
+          licenseIssueDate: ent.licenseIssueDate
+            ? new Date(ent.licenseIssueDate)
+            : null,
+          name: ent.name.trim(),
+          englishName: ent.englishName ? ent.englishName.trim() : null,
+          businessTypeId: ent.businessTypeId,
+          businessFieldId: ent.businessFieldId,
+          provinceId: ent.provinceId || null,
+          wardId: ent.wardId || null,
+          registeredAddress: ent.registeredAddress
+            ? ent.registeredAddress.trim()
+            : null,
+          operatingAddress: ent.operatingAddress
+            ? ent.operatingAddress.trim()
+            : null,
+          email: cleanEmail,
+          officePhone: ent.officePhone ? ent.officePhone.trim() : null,
+          representativeName: ent.representativeName
+            ? ent.representativeName.trim()
+            : null,
+          representativePhone: ent.representativePhone
+            ? ent.representativePhone.trim()
+            : null,
+          status: EnterpriseStatus.APPROVED,
+        };
+
+        await this.enterpriseRepo.create({
+          enterprise: enterprisePayload,
+          user: userPayload,
+        });
+        successCount++;
+      } catch (e: any) {
+        errors.push(`Lỗi khi lưu doanh nghiệp "${ent.name}": ${e.message}`);
+      }
+    }
+
+    return {
+      message: `Xác nhận lưu thành công ${successCount} doanh nghiệp vào cơ sở dữ liệu`,
+      importedCount: successCount,
+      errors: errors.length > 0 ? errors : undefined,
+    };
   }
 
   async delete(id: number) {
