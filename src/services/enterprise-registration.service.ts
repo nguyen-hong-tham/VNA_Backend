@@ -189,11 +189,13 @@ export class EnterpriseRegistrationService {
       englishName: dto.englishName ? dto.englishName.trim() : null,
       businessTypeId: dto.businessTypeId,
       businessFieldId: dto.businessFieldId,
-      provinceId: dto.provinceIdActivity || null,
-      wardId: dto.wardIdActivity || null,
+      provinceId: dto.provinceId,
+      wardId: dto.wardId,
       registeredAddress: dto.registeredAddress
         ? dto.registeredAddress.trim()
         : null,
+      operatingProvinceId: dto.operatingProvinceId || null,
+      operatingWardId: dto.operatingWardId || null,
       operatingAddress: dto.operatingAddress
         ? dto.operatingAddress.trim()
         : null,

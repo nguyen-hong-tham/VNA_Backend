@@ -206,6 +206,8 @@ model Enterprise {
   provinceId         Int?             @map("province_id")
   wardId             Int?             @map("ward_id")
   registeredAddress  String?          @map("registered_address") @db.Text
+  operatingProvinceId Int?            @map("operating_province_id")
+  operatingWardId    Int?             @map("operating_ward_id")
   operatingAddress   String?          @map("operating_address") @db.Text
   email              String?          @unique @db.VarChar(255)
   officePhone        String?          @map("office_phone") @db.VarChar(20)
