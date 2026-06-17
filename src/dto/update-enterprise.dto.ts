@@ -102,7 +102,7 @@ export class UpdateEnterpriseDto {
   @IsOptional()
   @IsInt({ message: 'ID Tỉnh/TP hoạt động phải là số nguyên' })
   @Type(() => Number)
-  provinceIdActivity?: number;
+  operatingProvinceId?: number;
 
   @ApiProperty({
     example: 27435,
@@ -112,7 +112,7 @@ export class UpdateEnterpriseDto {
   @IsOptional()
   @IsInt({ message: 'ID Phường/Xã hoạt động phải là số nguyên' })
   @Type(() => Number)
-  wardIdActivity?: number;
+  operatingWardId?: number;
 
   @ApiProperty({
     example: '456 Đường Nguyễn Huệ, Quận 1',
