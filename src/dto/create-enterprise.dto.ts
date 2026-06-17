@@ -9,6 +9,7 @@ import {
   IsEnum,
   ValidateNested,
   IsArray,
+  ValidateIf,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { DocumentType } from '@prisma/client';
@@ -202,6 +203,7 @@ export class CreateEnterpriseDto {
     required: false,
   })
   @IsOptional()
+  @ValidateIf((o, v) => v !== '' && v !== null && v !== undefined)
   @IsString()
   @Matches(/^(0|\+84)\d{9,10}$/, {
     message:
@@ -224,6 +226,7 @@ export class CreateEnterpriseDto {
     required: false,
   })
   @IsOptional()
+  @ValidateIf((o, v) => v !== '' && v !== null && v !== undefined)
   @IsString()
   @Matches(/^(0|\+84)\d{9,10}$/, {
     message:

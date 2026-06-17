@@ -31,8 +31,6 @@ import { UpdateBusinessTypeDto } from '../dto/update-business-type.dto';
 
 @ApiTags('BusinessTypes')
 @Controller('business-types')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class BusinessTypeController {
   constructor(private businessTypeService: BusinessTypeService) {}
 
@@ -67,6 +65,8 @@ export class BusinessTypeController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Tạo mới loại hình kinh doanh' })
   @ApiResponse({ status: 201, description: 'Tạo mới thành công' })
   @ApiResponse({ status: 400, description: 'Dữ liệu đầu vào không hợp lệ' })
@@ -76,6 +76,8 @@ export class BusinessTypeController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Cập nhật loại hình kinh doanh' })
   @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
   @ApiResponse({
@@ -90,6 +92,8 @@ export class BusinessTypeController {
   }
 
   @Post('import')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({
     summary: 'Nhập danh sách loại hình kinh doanh từ file Excel/CSV',
@@ -132,12 +136,18 @@ export class BusinessTypeController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Xóa loại hình kinh doanh' })
   @ApiResponse({ status: 200, description: 'Xóa thành công' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy loại hình kinh doanh' })
+  @ApiResponse({
+    status: 404,
+    description: 'Không tìm thấy loại hình kinh doanh',
+  })
   @ApiResponse({
     status: 400,
-    description: 'Không thể xóa loại hình kinh doanh này vì đang có doanh nghiệp tham chiếu đến',
+    description:
+      'Không thể xóa loại hình kinh doanh này vì đang có doanh nghiệp tham chiếu đến',
   })
   async delete(@Param('id', ParseIntPipe) id: number) {
     return this.businessTypeService.delete(id);

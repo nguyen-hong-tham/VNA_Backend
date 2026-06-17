@@ -4,6 +4,7 @@ import * as nodemailer from 'nodemailer';
 import { getWelcomeTemplate } from '../templates/welcome.template';
 import { getPasswordResetOtpTemplate } from '../templates/password-reset.template';
 import { getEmailChangeOtpTemplate } from '../templates/email-change-otp.template';
+import { getEnterpriseRegistrationOtpTemplate } from '../templates/enterprise-registration-otp.template';
 
 @Injectable()
 export class MailService {
@@ -86,6 +87,36 @@ export class MailService {
     } catch (error) {
       const err = error as Error;
       this.logger.error(`Failed to send welcome email to ${email}`, err.stack);
+    }
+  }
+
+  async sendEnterpriseRegistrationOtpEmail(
+    email: string,
+    enterpriseName: string,
+    otp: string,
+  ): Promise<void> {
+    const htmlContent = getEnterpriseRegistrationOtpTemplate(
+      enterpriseName,
+      otp,
+    );
+
+    try {
+      await this.transporter.sendMail({
+        from: this.configService.get<string>('SMTP_FROM'),
+        to: email,
+        subject: '✉️ Mã OTP xác thực đăng ký tài khoản doanh nghiệp',
+        html: htmlContent,
+      });
+      this.logger.log(
+        `Enterprise registration OTP email successfully sent to ${email}`,
+      );
+    } catch (error) {
+      const err = error as Error;
+      this.logger.error(
+        `Failed to send enterprise registration OTP email to ${email}`,
+        err.stack,
+      );
+      throw error;
     }
   }
 }

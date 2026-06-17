@@ -31,8 +31,6 @@ import { UpdateBusinessFieldDto } from '../dto/update-business-field.dto';
 
 @ApiTags('BusinessFields')
 @Controller('business-fields')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class BusinessFieldController {
   constructor(private businessFieldService: BusinessFieldService) {}
 
@@ -83,6 +81,8 @@ export class BusinessFieldController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Tạo mới ngành nghề kinh doanh' })
   @ApiResponse({ status: 201, description: 'Tạo mới thành công' })
   @ApiResponse({ status: 400, description: 'Dữ liệu đầu vào không hợp lệ' })
@@ -92,6 +92,8 @@ export class BusinessFieldController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Cập nhật ngành nghề kinh doanh' })
   @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
   @ApiResponse({
@@ -106,6 +108,8 @@ export class BusinessFieldController {
   }
 
   @Post('import')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({
     summary: 'Nhập danh sách ngành nghề kinh doanh từ file Excel/CSV',
@@ -148,9 +152,14 @@ export class BusinessFieldController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Xóa ngành nghề kinh doanh' })
   @ApiResponse({ status: 200, description: 'Xóa thành công' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy ngành nghề kinh doanh' })
+  @ApiResponse({
+    status: 404,
+    description: 'Không tìm thấy ngành nghề kinh doanh',
+  })
   @ApiResponse({
     status: 400,
     description:
