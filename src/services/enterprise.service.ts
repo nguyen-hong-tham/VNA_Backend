@@ -761,6 +761,8 @@ export class EnterpriseService {
               provinceId,
               wardId,
               registeredAddress,
+              operatingProvinceId: null,
+              operatingWardId: null,
               operatingAddress,
               englishName,
               email,
@@ -855,6 +857,8 @@ export class EnterpriseService {
           registeredAddress: ent.registeredAddress
             ? ent.registeredAddress.trim()
             : null,
+          operatingProvinceId: ent.operatingProvinceId || null,
+          operatingWardId: ent.operatingWardId || null,
           operatingAddress: ent.operatingAddress
             ? ent.operatingAddress.trim()
             : null,
