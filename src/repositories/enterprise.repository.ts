@@ -150,6 +150,8 @@ export class EnterpriseRepository {
       provinceId?: number | null;
       wardId?: number | null;
       registeredAddress?: string | null;
+      operatingProvinceId?: number | null;
+      operatingWardId?: number | null;
       operatingAddress?: string | null;
       email?: string | null;
       officePhone?: string | null;
@@ -204,10 +206,13 @@ export class EnterpriseRepository {
           provinceId: data.enterprise.provinceId,
           wardId: data.enterprise.wardId,
           registeredAddress: (data.enterprise.registeredAddress ?? null) as any,
+          operatingProvinceId: data.enterprise.operatingProvinceId,
+          operatingWardId: data.enterprise.operatingWardId,
           operatingAddress: data.enterprise.operatingAddress,
           email: data.enterprise.email,
           officePhone: data.enterprise.officePhone,
-          representativeName: (data.enterprise.representativeName ?? null) as any,
+          representativeName: (data.enterprise.representativeName ??
+            null) as any,
           representativePhone: data.enterprise.representativePhone,
           status: data.enterprise.status ?? EnterpriseStatus.PENDING,
           user: { connect: { id: user.id } },
@@ -262,6 +267,8 @@ export class EnterpriseRepository {
         provinceId?: number | null;
         wardId?: number | null;
         registeredAddress?: string | null;
+        operatingProvinceId?: number | null;
+        operatingWardId?: number | null;
         operatingAddress?: string | null;
         englishName?: string | null;
         email?: string;
@@ -295,6 +302,8 @@ export class EnterpriseRepository {
         provinceId: data.enterprise.provinceId,
         wardId: data.enterprise.wardId,
         registeredAddress: data.enterprise.registeredAddress,
+        operatingProvinceId: data.enterprise.operatingProvinceId,
+        operatingWardId: data.enterprise.operatingWardId,
         operatingAddress: data.enterprise.operatingAddress,
         englishName: data.enterprise.englishName,
         email: data.enterprise.email,
@@ -304,10 +313,14 @@ export class EnterpriseRepository {
       };
 
       if (data.enterprise.businessTypeId !== undefined) {
-        enterpriseData.businessType = { connect: { id: data.enterprise.businessTypeId } };
+        enterpriseData.businessType = {
+          connect: { id: data.enterprise.businessTypeId },
+        };
       }
       if (data.enterprise.businessFieldId !== undefined) {
-        enterpriseData.businessField = { connect: { id: data.enterprise.businessFieldId } };
+        enterpriseData.businessField = {
+          connect: { id: data.enterprise.businessFieldId },
+        };
       }
 
       // 1. Update Enterprise
@@ -369,9 +382,11 @@ export class EnterpriseRepository {
     });
   }
 
-
-
-  async updateStatus(id: number, status: EnterpriseStatus, approvedBy?: number) {
+  async updateStatus(
+    id: number,
+    status: EnterpriseStatus,
+    approvedBy?: number,
+  ) {
     const data: Prisma.EnterpriseUpdateInput = { status };
     if (status === 'APPROVED') {
       data.approvedAt = new Date();
