@@ -505,24 +505,62 @@ export class EnterpriseService {
         );
         const provinceKey = Object.keys(row).find((k) =>
           [
-            'tỉnh',
-            'thành phố',
-            'tinh',
-            'thanh pho',
-            'province',
+            'mã tỉnh đăng ký',
+            'ma tinh dang ky',
+            'tỉnh đăng ký',
+            'tinh dang ky',
+            'mã tỉnh đkkd',
+            'ma tinh dkkd',
+            'tỉnh đkkd',
+            'tinh dkkd',
             'mã tỉnh',
             'ma tinh',
+            'tỉnh',
+            'tinh',
+            'thành phố',
+            'thanh pho',
+            'province',
           ].includes(k.toLowerCase().trim()),
         );
         const wardKey = Object.keys(row).find((k) =>
           [
-            'phường',
-            'xã',
-            'phuong',
-            'xa',
-            'ward',
+            'mã phường đăng ký',
+            'ma phuong dang ky',
+            'phường đăng ký',
+            'phuong dang ky',
+            'mã phường đkkd',
+            'ma phuong dkkd',
+            'phường đkkd',
+            'phuong dkkd',
             'mã phường',
             'ma phuong',
+            'phường',
+            'phuong',
+            'xã',
+            'xa',
+            'ward',
+          ].includes(k.toLowerCase().trim()),
+        );
+        const operatingProvinceKey = Object.keys(row).find((k) =>
+          [
+            'mã tỉnh hoạt động',
+            'ma tinh hoat dong',
+            'tỉnh hoạt động',
+            'tinh hoat dong',
+            'operating province',
+            'operating_province_id',
+            'operatingprovinceid',
+          ].includes(k.toLowerCase().trim()),
+        );
+        const operatingWardKey = Object.keys(row).find((k) =>
+          [
+            'mã phường hoạt động',
+            'ma phuong hoat dong',
+            'phường hoạt động',
+            'phuong hoat dong',
+            'operating ward',
+            'operating_ward_id',
+            'operatingwardid',
           ].includes(k.toLowerCase().trim()),
         );
         const regAddrKey = Object.keys(row).find((k) =>
@@ -724,6 +762,19 @@ export class EnterpriseService {
           ? parseInt(String(row[wardKey] || '0').replace(/\D/g, ''), 10) || 1
           : 1;
 
+        const operatingProvinceId = operatingProvinceKey
+          ? parseInt(
+              String(row[operatingProvinceKey] || '0').replace(/\D/g, ''),
+              10,
+            ) || null
+          : null;
+        const operatingWardId = operatingWardKey
+          ? parseInt(
+              String(row[operatingWardKey] || '0').replace(/\D/g, ''),
+              10,
+            ) || null
+          : null;
+
         const operatingAddress = optAddrKey
           ? String(row[optAddrKey] || '').trim()
           : null;
@@ -761,8 +812,8 @@ export class EnterpriseService {
               provinceId,
               wardId,
               registeredAddress,
-              operatingProvinceId: null,
-              operatingWardId: null,
+              operatingProvinceId,
+              operatingWardId,
               operatingAddress,
               englishName,
               email,
