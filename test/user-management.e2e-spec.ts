@@ -4,6 +4,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { PrismaService } from '../src/repositories/prisma.service';
+import * as XLSX from 'xlsx';
 
 describe('User Management e2e Tests', () => {
   jest.setTimeout(30000);
@@ -334,6 +335,167 @@ describe('User Management e2e Tests', () => {
         expect(res.status).toBe(201);
         expect(res.body).toHaveProperty('url');
       }
+    });
+  });
+
+  describe('Excel Import: Preview and Confirm Flow', () => {
+    let previewedUserData: any;
+
+    it('POST /users/import-preview: Happy Path - Validate and return structured data', async () => {
+      const wb = XLSX.utils.book_new();
+      const uniqueName = `imp_${Date.now()}`;
+      const data = [
+        {
+          'Tài khoản (Tên đăng nhập)': uniqueName,
+          'Họ và tên': 'Nguyễn Văn Import',
+          'Email': `${uniqueName}@vna.gov.vn`,
+          'Vai trò': 'Nhân viên nghiệp vụ',
+          'Ngày sinh': '15/08/1995',
+          'Chức danh': 'Chuyên viên',
+          'Giới tính': 'Nam',
+          'Địa chỉ': 'Hà Nội'
+        }
+      ];
+      const ws = XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+      const res = await request(app.getHttpServer())
+        .post('/api/users/import-preview')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .attach('file', buffer, 'users_import.xlsx');
+
+      expect(res.status).toBe(201); // NestJS defaults POST requests to 201 Created
+      expect(res.body).toHaveProperty('totalRows', 1);
+      expect(res.body).toHaveProperty('validCount', 1);
+      expect(res.body).toHaveProperty('invalidCount', 0);
+      expect(res.body.results[0]).toHaveProperty('isValid', true);
+      expect(res.body.results[0].data).toHaveProperty('username', uniqueName);
+      expect(res.body.results[0].data).toHaveProperty('birthDate', '15/08/1995');
+
+      previewedUserData = res.body.results[0].data;
+    });
+
+    it('POST /users/import-preview: Happy Path - Omit birthDate successfully', async () => {
+      const wb = XLSX.utils.book_new();
+      const uniqueName = `imp_opt_${Date.now()}`;
+      const data = [
+        {
+          'Tài khoản (Tên đăng nhập)': uniqueName,
+          'Họ và tên': 'Nguyễn Văn Optional Birthdate',
+          'Email': `${uniqueName}@vna.gov.vn`,
+          'Vai trò': 'Nhân viên nghiệp vụ',
+          // 'Ngày sinh' is omitted
+          'Chức danh': 'Chuyên viên',
+          'Giới tính': 'Nam',
+          'Địa chỉ': 'Hà Nội'
+        }
+      ];
+      const ws = XLSX.utils.json_to_sheet(data);
+      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+      const res = await request(app.getHttpServer())
+        .post('/api/users/import-preview')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .attach('file', buffer, 'users_import_opt.xlsx');
+
+      expect(res.status).toBe(201);
+      expect(res.body).toHaveProperty('totalRows', 1);
+      expect(res.body).toHaveProperty('validCount', 1);
+      expect(res.body).toHaveProperty('invalidCount', 0);
+      expect(res.body.results[0]).toHaveProperty('isValid', true);
+      expect(res.body.results[0].data).toHaveProperty('username', uniqueName);
+      expect(res.body.results[0].data.birthDate).toBeUndefined();
+    });
+
+    it('POST /users/import-preview: Validation Path - Catch multiple validation errors', async () => {
+      const wb = XLSX.utils.book_new();
+      const invalidData = [
+        {
+          'Tài khoản (Tên đăng nhập)': 'Invalid_USER_Name', // contains uppercase
+          'Họ và tên': 'Test Import Invalid',
+          'Email': 'invalid_email', // wrong format
+          'Vai trò': 'Giám đốc', // non-existent role
+          'Ngày sinh': '31/02/1995' // invalid date
+        }
+      ];
+      const ws = XLSX.utils.json_to_sheet(invalidData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+      const res = await request(app.getHttpServer())
+        .post('/api/users/import-preview')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .attach('file', buffer, 'users_import_invalid.xlsx');
+
+      expect(res.status).toBe(201);
+      expect(res.body).toHaveProperty('totalRows', 1);
+      expect(res.body).toHaveProperty('validCount', 0);
+      expect(res.body).toHaveProperty('invalidCount', 1);
+      expect(res.body.results[0]).toHaveProperty('isValid', false);
+      console.log('--- ACTUAL VALIDATION PREVIEW ERRORS =', res.body.results[0].errors);
+      expect(res.body.results[0].errors.length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('POST /users/import-confirm: Happy Path - Save users successfully into DB', async () => {
+      expect(previewedUserData).toBeDefined();
+
+      const res = await request(app.getHttpServer())
+        .post('/api/users/import-confirm')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ users: [previewedUserData] });
+
+      expect(res.status).toBe(201);
+      expect(res.body).toHaveProperty('importedCount', 1);
+      expect(res.body.errors).toBeUndefined();
+
+      // Check if user was actually created
+      const checkRes = await request(app.getHttpServer())
+        .get('/api/users/get-all')
+        .set('Authorization', `Bearer ${adminToken}`);
+      const found = checkRes.body.data.find((u: any) => u.username === previewedUserData.username);
+      expect(found).toBeDefined();
+      expect(found.fullName).toBe('Nguyễn Văn Import');
+      
+      // Clean up after test
+      await prisma.user.delete({ where: { username: previewedUserData.username } });
+    });
+
+    it('POST /users/import-confirm: Concurrency/Duplicate Path - Block duplicate entry', async () => {
+      // Create user directly
+      const tempUser = await prisma.user.create({
+        data: {
+          username: 'concurrency_dup_test',
+          passwordHash: 'dummy',
+          email: 'concurrency_dup_test@gmail.com',
+          roleId: staffRoleId,
+          birthDate: new Date('1990-05-15'),
+        }
+      });
+
+      const res = await request(app.getHttpServer())
+        .post('/api/users/import-confirm')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          users: [
+            {
+              username: 'concurrency_dup_test',
+              fullName: 'Duplicate Confirmed',
+              email: 'concurrency_dup_test@gmail.com',
+              roleId: staffRoleId,
+              birthDate: '15/05/1990'
+            }
+          ]
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body).toHaveProperty('importedCount', 0);
+      expect(res.body.errors).toBeDefined();
+      expect(res.body.errors[0]).toContain('đã tồn tại trong DB');
+
+      // Clean up
+      await prisma.user.delete({ where: { id: tempUser.id } });
     });
   });
 });
