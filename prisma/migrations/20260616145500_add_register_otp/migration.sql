@@ -5,7 +5,7 @@
 
 */
 -- AlterTable
-ALTER TABLE "users" DROP COLUMN "phone";
+ALTER TABLE "users" DROP COLUMN IF EXISTS "phone";
 
 -- CreateTable
 CREATE TABLE "register_otps" (

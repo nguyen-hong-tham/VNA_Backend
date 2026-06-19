@@ -40,6 +40,7 @@ import { UpdateUserDto } from '../dto/user/update-user.dto';
 import { UpdateStatusDto } from '../dto/user/update-status.dto';
 import { BulkDeleteDto } from '../dto/user/bulk-delete.dto';
 import { ResetPasswordAdminDto } from '../dto/user/reset-password.dto';
+import { ConfirmImportUserDto } from '../dto/user/import-user.dto';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -184,10 +185,13 @@ export class UserManagementController {
     };
   }
 
-  @Post('import')
+  @Post('import-preview')
   @Roles('ADMIN')
   @UseInterceptors(FileInterceptor('file'))
-  @ApiOperation({ summary: 'Nhập danh sách cán bộ từ file Excel (.xlsx)' })
+  @ApiOperation({
+    summary:
+      'Xem trước và kiểm tra danh sách cán bộ từ file Excel (chưa lưu DB)',
+  })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -196,13 +200,13 @@ export class UserManagementController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'File Excel (.xlsx) chứa danh sách cán bộ (tối đa 5MB)',
+          description: 'File Excel (.xlsx) chứa danh sách cán bộ để review',
         },
       },
       required: ['file'],
     },
   })
-  async importUsers(
+  async importPreview(
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -211,7 +215,8 @@ export class UserManagementController {
             message: 'Dung lượng file không được vượt quá 5MB',
           }),
           new FileTypeValidator({
-            fileType: /application\/vnd.openxmlformats-officedocument.spreadsheetml.sheet/,
+            fileType:
+              /application\/vnd.openxmlformats-officedocument.spreadsheetml.sheet/,
             fallbackToMimetype: true,
           } as any),
         ],
@@ -220,7 +225,17 @@ export class UserManagementController {
     )
     file: Express.Multer.File,
   ) {
-    return this.userService.importFromExcel(file);
+    return this.userService.importPreview(file);
+  }
+
+  @Post('import-confirm')
+  @Roles('ADMIN')
+  @ApiOperation({
+    summary: 'Xác nhận lưu danh sách cán bộ đã review hợp lệ vào Database',
+  })
+  @ApiResponse({ status: 201, description: 'Lưu dữ liệu thành công' })
+  async importConfirm(@Body() dto: ConfirmImportUserDto) {
+    return this.userService.importConfirm(dto);
   }
 
   @Get('export')
