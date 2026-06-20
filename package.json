@@ -17,7 +17,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e:report": "jest --config ./test/jest-e2e.json --testPathPatterns=report --runInBand --forceExit",
+    "test:e2e:user": "jest --config ./test/jest-e2e.json --testPathPatterns=user-management --runInBand --forceExit"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
