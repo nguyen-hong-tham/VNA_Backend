@@ -15,6 +15,7 @@ import {
   ParseIntPipe,
   Req,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -28,6 +29,8 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { EnterpriseStatus } from '@prisma/client';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { EnterpriseService } from '../services/enterprise.service';
 import { SupabaseService } from '../services/supabase.service';
 import { CreateEnterpriseDto } from '../dto/create-enterprise.dto';
@@ -40,7 +43,7 @@ import { ConfirmImportDto } from '../dto/confirm-import.dto';
 
 @ApiTags('Enterprises')
 @Controller('enterprises')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @ApiBearerAuth()
 export class EnterpriseController {
   constructor(
@@ -49,6 +52,7 @@ export class EnterpriseController {
   ) {}
 
   @Get()
+  @Roles('ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Lấy danh sách doanh nghiệp (phân trang + lọc)' })
   @ApiQuery({
     name: 'page',
@@ -127,11 +131,21 @@ export class EnterpriseController {
   @ApiOperation({ summary: 'Lấy chi tiết doanh nghiệp' })
   @ApiResponse({ status: 200, description: 'Lấy chi tiết thành công' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy doanh nghiệp' })
-  async findById(@Param('id', ParseIntPipe) id: number) {
+  async findById(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: any,
+  ) {
+    const user = req.user;
+    if (user.role.code === 'ENTERPRISE') {
+      if (!user.enterpriseProfile || user.enterpriseProfile.id !== id) {
+        throw new ForbiddenException('Bạn không có quyền xem thông tin của doanh nghiệp khác');
+      }
+    }
     return this.enterpriseService.findById(id);
   }
 
   @Post()
+  @Roles('ADMIN', 'MANAGER')
   @ApiOperation({
     summary: 'Thêm mới doanh nghiệp (đồng thời tạo tài khoản đăng nhập)',
   })
@@ -151,11 +165,23 @@ export class EnterpriseController {
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateEnterpriseDto,
+    @Req() req: any,
   ) {
+    const user = req.user;
+    if (user.role.code === 'ENTERPRISE') {
+      if (!user.enterpriseProfile || user.enterpriseProfile.id !== id) {
+        throw new ForbiddenException('Bạn không có quyền chỉnh sửa thông tin của doanh nghiệp khác');
+      }
+      // Doanh nghiệp không được tự ý sửa email thông qua API này (phải qua luồng OTP)
+      if (dto.email !== undefined && dto.email !== user.enterpriseProfile.email) {
+        throw new BadRequestException('Thay đổi email bắt buộc phải xác thực mã OTP qua luồng riêng');
+      }
+    }
     return this.enterpriseService.update(id, dto);
   }
 
   @Patch(':id/status')
+  @Roles('ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Bật/tắt trạng thái hoạt động của doanh nghiệp' })
   @ApiResponse({ status: 200, description: 'Cập nhật trạng thái thành công' })
   @ApiResponse({ status: 404, description: 'Không tìm thấy doanh nghiệp' })
@@ -169,6 +195,7 @@ export class EnterpriseController {
   }
 
   @Post('change-password')
+  @Roles('ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Đổi mật khẩu tài khoản doanh nghiệp từ phía sở' })
   @ApiResponse({ status: 200, description: 'Đổi mật khẩu thành công' })
   @ApiResponse({
@@ -241,6 +268,7 @@ export class EnterpriseController {
   }
 
   @Post('import-preview')
+  @Roles('ADMIN', 'MANAGER')
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({
     summary:
@@ -280,6 +308,7 @@ export class EnterpriseController {
   }
 
   @Post('import-confirm')
+  @Roles('ADMIN', 'MANAGER')
   @ApiOperation({
     summary: 'Xác nhận lưu danh sách doanh nghiệp đã được review hợp lệ vào DB',
   })
@@ -289,6 +318,7 @@ export class EnterpriseController {
   }
 
   @Delete(':id')
+  @Roles('ADMIN', 'MANAGER')
   @ApiOperation({
     summary:
       'Xóa doanh nghiệp (đồng thời xóa tài khoản người dùng, báo cáo và tài liệu liên quan)',
