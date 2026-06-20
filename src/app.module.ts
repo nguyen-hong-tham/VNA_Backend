@@ -11,6 +11,7 @@ import { BusinessTypeController } from './controllers/business-type.controller';
 import { BusinessFieldController } from './controllers/business-field.controller';
 import { EnterpriseController } from './controllers/enterprise.controller';
 import { EnterpriseRegistrationController } from './controllers/enterprise-registration.controller';
+import { ReportController } from './controllers/report.controller';
 
 // Services
 import { AuthService } from './services/auth.service';
@@ -21,6 +22,7 @@ import { BusinessFieldService } from './services/business-field.service';
 import { EnterpriseService } from './services/enterprise.service';
 import { UserService } from './services/user.service';
 import { EnterpriseRegistrationService } from './services/enterprise-registration.service';
+import { ReportService } from './services/report.service';
 
 // Repositories
 import { PrismaService } from './repositories/prisma.service';
@@ -50,9 +52,11 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
     BusinessFieldController,
     EnterpriseController,
     EnterpriseRegistrationController,
+    ReportController,
   ],
   providers: [
     AuthService,
+    ReportService,
     EnterpriseRegistrationService,
     MailService,
     SupabaseService,
