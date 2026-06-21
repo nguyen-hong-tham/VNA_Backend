@@ -172,13 +172,13 @@ export class EnterpriseRegistrationService {
       fullName: dto.representativeName ? dto.representativeName.trim() : null,
       email: cleanEmail,
       roleId: role.id,
-      isActive: false, // Tài khoản mới đăng ký sẽ chưa kích hoạt
+      isActive: false, // Sẽ kích hoạt sau khi xác thực OTP
       provinceId: dto.provinceId,
       wardId: dto.wardId,
       address: dto.registeredAddress ? dto.registeredAddress.trim() : null,
     };
 
-    // 8. Tạo payload cho Enterprise (Đăng ký tự do sẽ ở trạng thái PENDING)
+    // 8. Tạo payload cho Enterprise (Đăng ký tự do sẽ ở trạng thái APPROVED — có thể đăng nhập ngay)
     const enterprisePayload = {
       taxCode,
       licenseNumber: licenseNum,
@@ -207,7 +207,7 @@ export class EnterpriseRegistrationService {
       representativePhone: dto.representativePhone
         ? dto.representativePhone.trim()
         : null,
-      status: 'PENDING' as any, // Trạng thái chờ duyệt
+      status: 'APPROVED' as any, // Tự động duyệt — đăng nhập ngay sau xác thực OTP
     };
 
     // 9. Chuẩn bị tài liệu đính kèm
@@ -339,13 +339,15 @@ export class EnterpriseRegistrationService {
         data: { isActive: true },
       });
 
+      // Enterprise đã được set APPROVED lúc tạo, không cần update lại
+
       await tx.registerOtp.deleteMany({
         where: { userId: user.id },
       });
     });
 
     return {
-      message: 'Xác nhận đăng ký doanh nghiệp thành công',
+      message: 'Xác nhận đăng ký doanh nghiệp thành công. Bạn có thể đăng nhập ngay.',
       username: user.username,
       password: '12345678', // Mật khẩu mặc định hiển thị pop up
     };
