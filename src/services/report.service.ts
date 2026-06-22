@@ -492,9 +492,9 @@ export class ReportService {
             await tx.reportAccidentCase.createMany({
               data: sectionDto.accidentCases.map((c) => ({
                 reportSectionId: section.id,
-                accidentCauseId: c.accidentCauseId ?? null,
-                injuryFactorId: c.injuryFactorId ?? null,
-                occupationId: c.occupationId ?? null,
+                accidentCauseId: c.accidentCauseId || null,
+                injuryFactorId: c.injuryFactorId || null,
+                occupationId: c.occupationId || null,
                 accidentCount: c.accidentCount ?? 0,
                 fatalAccidentCount: c.fatalAccidentCount ?? 0,
                 multiVictimAccidentCount: c.multiVictimAccidentCount ?? 0,
