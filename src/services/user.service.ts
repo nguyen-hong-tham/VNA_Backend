@@ -288,11 +288,19 @@ export class UserService {
         return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
     }
 
-    async getRoles() {
+    async getRoles(search?: string) {
         return this.prisma.role.findMany({
             where: {
                 isActive: true,
-                code: { not: 'ENTERPRISE' }
+                code: { not: 'ENTERPRISE' },
+                ...(search
+                    ? {
+                          OR: [
+                              { name: { contains: search, mode: 'insensitive' } },
+                              { code: { contains: search, mode: 'insensitive' } },
+                          ],
+                      }
+                    : {}),
             },
             select: {
                 id: true,
@@ -303,10 +311,14 @@ export class UserService {
         });
     }
 
-    async getPositions() {
+    async getPositions(search?: string) {
         const users = await this.prisma.user.findMany({
             where: {
-                position: { not: null, notIn: [''] },
+                position: { 
+                    not: null, 
+                    notIn: [''],
+                    ...(search ? { contains: search, mode: 'insensitive' } : {})
+                },
             },
             select: {
                 position: true,

@@ -23,6 +23,7 @@ import {
   ApiBody,
   ApiConsumes,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -71,16 +72,26 @@ export class UserManagementController {
 
   @Get('roles')
   @Roles('ADMIN', 'MANAGER', 'STAFF')
-  @ApiOperation({ summary: 'Lấy danh sách các vai trò (loại trừ Enterprise)' })
-  async getRoles() {
-    return this.userService.getRoles();
+  @ApiOperation({ summary: 'Lấy danh sách các vai trò (loại trừ Enterprise) (Hỗ trợ Autocomplete)' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Từ khóa tìm kiếm theo tên hoặc mã vai trò',
+  })
+  async getRoles(@Query('search') search?: string) {
+    return this.userService.getRoles(search);
   }
 
   @Get('positions')
   @Roles('ADMIN', 'MANAGER', 'STAFF')
-  @ApiOperation({ summary: 'Lấy danh sách chức vụ/chức danh công việc hiện có' })
-  async getPositions() {
-    return this.userService.getPositions();
+  @ApiOperation({ summary: 'Lấy danh sách chức vụ/chức danh công việc hiện có (Hỗ trợ Autocomplete)' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Từ khóa tìm kiếm theo chức danh',
+  })
+  async getPositions(@Query('search') search?: string) {
+    return this.userService.getPositions(search);
   }
 
   @Post('upload-avatar')

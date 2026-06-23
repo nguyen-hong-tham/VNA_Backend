@@ -307,6 +307,10 @@ export class EnterpriseService {
       enterpriseUpdate.businessTypeId = dto.businessTypeId;
     if (dto.businessFieldId !== undefined)
       enterpriseUpdate.businessFieldId = dto.businessFieldId;
+    if (dto.provinceId !== undefined)
+      enterpriseUpdate.provinceId = dto.provinceId;
+    if (dto.wardId !== undefined)
+      enterpriseUpdate.wardId = dto.wardId;
     if (dto.operatingProvinceId !== undefined)
       enterpriseUpdate.operatingProvinceId = dto.operatingProvinceId;
     if (dto.operatingWardId !== undefined)
