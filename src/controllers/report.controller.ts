@@ -8,6 +8,7 @@ import {
   Put,
   Query,
   Req,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -156,5 +157,20 @@ export class ReportController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     return this.reportService.uploadStampedFile(req.user.id, id, file);
+  }
+
+  // GET /reports/:id/export-word
+  @Get(':id/export-word')
+  @ApiOperation({ summary: 'Xuất báo cáo ra file Word (.docx)' })
+  @ApiResponse({ status: 200, description: 'File Word báo cáo' })
+  async exportWordReport(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseIntPipe) id: number,
+    @Res() res: import('express').Response,
+  ) {
+    const { buffer, fileName } = await this.reportService.exportWordReport(req.user.id, id);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`);
+    res.send(buffer);
   }
 }
