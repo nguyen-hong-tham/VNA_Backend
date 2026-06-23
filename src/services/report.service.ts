@@ -8,6 +8,12 @@ import { PrismaService } from '../repositories/prisma.service';
 import { SupabaseService } from './supabase.service';
 import { UpdateReportDataDto } from '../dto/report.dto';
 import { CategoryType, PeriodStatus, ReportStatus, SectionType } from '@prisma/client';
+import * as fs from 'fs';
+import * as path from 'path';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const PizZip = require('pizzip');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const Docxtemplater = require('docxtemplater');
 
 @Injectable()
 export class ReportService {
@@ -278,6 +284,18 @@ export class ReportService {
         ? dto.femaleEmployeeTotal
         : report.femaleEmployeeTotal;
 
+      const finalSalaryFund = dto.salaryFund !== undefined
+        ? dto.salaryFund
+        : report.salaryFund;
+
+      if (finalCompanyEmployeeTotal <= 0) {
+        throw new BadRequestException('Tổng số lao động của cơ sở phải lớn hơn 0');
+      }
+
+      if (Number(finalSalaryFund) <= 0) {
+        throw new BadRequestException('Tổng quỹ lương phải lớn hơn 0');
+      }
+
       if (finalFemaleEmployeeTotal > finalCompanyEmployeeTotal) {
         throw new BadRequestException(
           'Số lao động nữ không được lớn hơn tổng số lao động của cơ sở',
@@ -330,6 +348,14 @@ export class ReportService {
         const finalSalaryCompensation = sectionDto.salaryCompensation !== undefined ? sectionDto.salaryCompensation : section.salaryCompensation;
         const finalCompensationCost = sectionDto.compensationCost !== undefined ? sectionDto.compensationCost : section.compensationCost;
         const finalAssetDamage = sectionDto.assetDamage !== undefined ? sectionDto.assetDamage : section.assetDamage;
+        const finalDaysLost = sectionDto.daysLost !== undefined ? sectionDto.daysLost : section.daysLost;
+
+        // (0) Có nhập tổng số vụ thì bắt buộc có số người bị nạn
+        if (finalAccidentCount > 0 && finalVictims === 0) {
+          throw new BadRequestException(
+            `Có nhập tổng số vụ (${finalAccidentCount}) thì bắt buộc phải có nhập tổng số người bị nạn lớn hơn 0 trong phần ${sectionLabel}`,
+          );
+        }
 
         // (1) Số vụ chết người & số vụ có 2 người bị nạn trở lên <= tổng số vụ
         if (finalFatalAccidentCount > finalAccidentCount) {
@@ -387,6 +413,16 @@ export class ReportService {
           const sumCompensationCost = sectionDto.accidentCases.reduce((sum, c) => sum + (Number(c.compensationCost) || 0), 0);
           const sumAssetDamage = sectionDto.accidentCases.reduce((sum, c) => sum + (Number(c.assetDamage) || 0), 0);
 
+          const sumFatalAccidentCount = sectionDto.accidentCases.reduce((sum, c) => sum + (c.fatalAccidentCount ?? 0), 0);
+          const sumMultiVictimAccidentCount = sectionDto.accidentCases.reduce((sum, c) => sum + (c.multiVictimAccidentCount ?? 0), 0);
+          const sumFemaleVictims = sectionDto.accidentCases.reduce((sum, c) => sum + (c.femaleVictimCount ?? 0), 0);
+          const sumDeathCount = sectionDto.accidentCases.reduce((sum, c) => sum + (c.deathCount ?? 0), 0);
+          const sumSeverelyInjuredCount = sectionDto.accidentCases.reduce((sum, c) => sum + (c.severelyInjuredCount ?? 0), 0);
+          const sumUnmanagedFemaleVictims = sectionDto.accidentCases.reduce((sum, c) => sum + (c.unmanagedCauseFemaleVictimCount ?? 0), 0);
+          const sumUnmanagedDeathCount = sectionDto.accidentCases.reduce((sum, c) => sum + (c.unmanagedCauseDeathCount ?? 0), 0);
+          const sumUnmanagedSeverelyInjuredCount = sectionDto.accidentCases.reduce((sum, c) => sum + (c.unmanagedCauseSeverelyInjuredCount ?? 0), 0);
+          const sumDaysLost = sectionDto.accidentCases.reduce((sum, c) => sum + (c.daysLost ?? 0), 0);
+
           if (sumAccidentCount !== finalAccidentCount) {
             throw new BadRequestException(
               `Tổng số vụ từ các chi tiết (${sumAccidentCount}) phải bằng tổng số vụ đã khai (${finalAccidentCount}) trong phần ${sectionLabel}`,
@@ -420,6 +456,51 @@ export class ReportService {
           if (sumAssetDamage !== Number(finalAssetDamage || 0)) {
             throw new BadRequestException(
               `Tổng thiệt hại tài sản từ các chi tiết (${sumAssetDamage}) phải bằng thiệt hại tài sản đã khai (${finalAssetDamage}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumFatalAccidentCount !== finalFatalAccidentCount) {
+            throw new BadRequestException(
+              `Tổng số vụ có người chết từ các chi tiết (${sumFatalAccidentCount}) phải bằng số vụ có người chết đã khai (${finalFatalAccidentCount}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumMultiVictimAccidentCount !== finalMultiVictimAccidentCount) {
+            throw new BadRequestException(
+              `Tổng số vụ có 2 người bị nạn trở lên từ các chi tiết (${sumMultiVictimAccidentCount}) phải bằng số vụ tương ứng đã khai (${finalMultiVictimAccidentCount}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumFemaleVictims !== finalFemaleVictims) {
+            throw new BadRequestException(
+              `Tổng số lao động nữ bị nạn từ các chi tiết (${sumFemaleVictims}) phải bằng số lao động nữ bị nạn đã khai (${finalFemaleVictims}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumDeathCount !== finalDeathCount) {
+            throw new BadRequestException(
+              `Tổng số người chết từ các chi tiết (${sumDeathCount}) phải bằng số người chết đã khai (${finalDeathCount}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumSeverelyInjuredCount !== finalSeverelyInjuredCount) {
+            throw new BadRequestException(
+              `Tổng số người bị thương nặng từ các chi tiết (${sumSeverelyInjuredCount}) phải bằng số người bị thương nặng đã khai (${finalSeverelyInjuredCount}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumUnmanagedFemaleVictims !== finalUnmanagedFemaleVictims) {
+            throw new BadRequestException(
+              `Tổng lao động nữ bị nạn không quản lý từ các chi tiết (${sumUnmanagedFemaleVictims}) phải bằng con số tương ứng đã khai (${finalUnmanagedFemaleVictims}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumUnmanagedDeathCount !== finalUnmanagedDeathCount) {
+            throw new BadRequestException(
+              `Tổng số người chết không quản lý từ các chi tiết (${sumUnmanagedDeathCount}) phải bằng con số tương ứng đã khai (${finalUnmanagedDeathCount}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumUnmanagedSeverelyInjuredCount !== finalUnmanagedSeverelyInjuredCount) {
+            throw new BadRequestException(
+              `Tổng số người bị thương nặng không quản lý từ các chi tiết (${sumUnmanagedSeverelyInjuredCount}) phải bằng con số tương ứng đã khai (${finalUnmanagedSeverelyInjuredCount}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumDaysLost !== finalDaysLost) {
+            throw new BadRequestException(
+              `Tổng số ngày nghỉ từ các chi tiết (${sumDaysLost}) phải bằng tổng số ngày nghỉ đã khai (${finalDaysLost}) trong phần ${sectionLabel}`,
             );
           }
         }
@@ -475,6 +556,14 @@ export class ReportService {
         if (sectionDto.accidentCases !== undefined) {
           for (const c of sectionDto.accidentCases) {
             const accCount = c.accidentCount ?? 0;
+            const vic = c.victimCount ?? 0;
+
+            if (accCount > 0 && vic === 0) {
+              throw new BadRequestException(
+                `Có nhập tổng số vụ (${accCount}) thì bắt buộc phải có nhập tổng số người bị nạn lớn hơn 0 trong chi tiết vụ tai nạn`,
+              );
+            }
+
             const fatalAcc = c.fatalAccidentCount ?? 0;
             const multiAcc = c.multiVictimAccidentCount ?? 0;
             if (fatalAcc > accCount) {
@@ -488,23 +577,23 @@ export class ReportService {
               );
             }
 
-            const vic = c.victimCount ?? 0;
+            const vicCount = c.victimCount ?? 0;
             const femVic = c.femaleVictimCount ?? 0;
             const deathVic = c.deathCount ?? 0;
             const severeVic = c.severelyInjuredCount ?? 0;
-            if (femVic > vic) {
+            if (femVic > vicCount) {
               throw new BadRequestException(
-                `Số lao động nữ bị nạn (${femVic}) trong vụ tai nạn chi tiết không được lớn hơn tổng số người bị nạn của vụ đó (${vic})`,
+                `Số lao động nữ bị nạn (${femVic}) trong vụ tai nạn chi tiết không được lớn hơn tổng số người bị nạn của vụ đó (${vicCount})`,
               );
             }
-            if (deathVic > vic) {
+            if (deathVic > vicCount) {
               throw new BadRequestException(
-                `Số người chết (${deathVic}) trong vụ tai nạn chi tiết không được lớn hơn tổng số người bị nạn của vụ đó (${vic})`,
+                `Số người chết (${deathVic}) trong vụ tai nạn chi tiết không được lớn hơn tổng số người bị nạn của vụ đó (${vicCount})`,
               );
             }
-            if (severeVic > vic) {
+            if (severeVic > vicCount) {
               throw new BadRequestException(
-                `Số người bị thương nặng (${severeVic}) trong vụ tai nạn chi tiết không được lớn hơn tổng số người bị nạn của vụ đó (${vic})`,
+                `Số người bị thương nặng (${severeVic}) trong vụ tai nạn chi tiết không được lớn hơn tổng số người bị nạn của vụ đó (${vicCount})`,
               );
             }
 
@@ -659,5 +748,198 @@ export class ReportService {
       fileName: uploaded.fileName,
       filePath: uploaded.url,
     };
+  }
+
+  // 8. Xuất báo cáo ra file Word
+  async exportWordReport(userId: number, reportId: number): Promise<{ buffer: Buffer; fileName: string }> {
+    const enterprise = await this.getEnterpriseByUserId(userId);
+
+    const report = await this.prisma.report.findUnique({
+      where: { id: reportId },
+      include: {
+        reportPeriod: true,
+        enterprise: {
+          include: {
+            businessType: true,
+            businessField: true,
+          },
+        },
+        sections: {
+          include: {
+            accidentCases: {
+              include: {
+                accidentCause: { select: { id: true, code: true, name: true } },
+                injuryFactor: { select: { id: true, code: true, name: true } },
+                occupation: { select: { id: true, code: true, name: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!report) throw new NotFoundException('Không tìm thấy báo cáo');
+    if (report.enterpriseId !== enterprise.id) throw new ForbiddenException('Bạn không có quyền xuất báo cáo này');
+
+    const accSection = report.sections.find(s => s.sectionType === SectionType.ACCIDENT);
+    const allwSection = report.sections.find(s => s.sectionType === SectionType.ALLOWANCE);
+
+    const fmt = (v: number | null | undefined) => (v ?? 0).toLocaleString('vi-VN');
+    const fmtNum = (v: number | null | undefined) => String(v ?? 0);
+
+    // Chi tiết vụ TNLD — phân theo nguyên nhân
+    const accCases = accSection?.accidentCases ?? [];
+
+    // Hàm hỗ trợ gom nhóm theo ID để lấy cả tên và mã
+    const groupBy = (getCat: (c: typeof accCases[0]) => { id?: number; code?: string; name?: string } | null | undefined) => {
+      const groups = new Map<number | string, any>();
+      for (const c of accCases) {
+        const cat = getCat(c);
+        const key = cat?.id ?? cat?.name ?? 'Khác';
+        if (!groups.has(key)) {
+          groups.set(key, { ...c, key, ma_so: cat?.code ?? '', ten_chi_tieu: cat?.name ?? 'Khác', accidentCount: 0, fatalAccidentCount: 0, multiVictimAccidentCount: 0, victimCount: 0, unmanagedCauseVictimCount: 0, femaleVictimCount: 0, unmanagedCauseFemaleVictimCount: 0, deathCount: 0, unmanagedCauseDeathCount: 0, severelyInjuredCount: 0, unmanagedCauseSeverelyInjuredCount: 0, medicalCost: 0, salaryCompensation: 0, compensationCost: 0, assetDamage: 0, daysLost: 0 });
+        }
+        const g = groups.get(key)!;
+        g.accidentCount += c.accidentCount;
+        g.fatalAccidentCount += c.fatalAccidentCount;
+        g.multiVictimAccidentCount += c.multiVictimAccidentCount;
+        g.victimCount += c.victimCount;
+        g.unmanagedCauseVictimCount += c.unmanagedCauseVictimCount;
+        g.femaleVictimCount += c.femaleVictimCount;
+        g.unmanagedCauseFemaleVictimCount += c.unmanagedCauseFemaleVictimCount;
+        g.deathCount += c.deathCount;
+        g.unmanagedCauseDeathCount += c.unmanagedCauseDeathCount;
+        g.severelyInjuredCount += c.severelyInjuredCount;
+        g.unmanagedCauseSeverelyInjuredCount += c.unmanagedCauseSeverelyInjuredCount;
+        g.medicalCost = Number(g.medicalCost) + Number(c.medicalCost);
+        g.salaryCompensation = Number(g.salaryCompensation) + Number(c.salaryCompensation);
+        g.compensationCost = Number(g.compensationCost) + Number(c.compensationCost);
+        g.assetDamage = Number(g.assetDamage) + Number(c.assetDamage);
+        g.daysLost += c.daysLost;
+      }
+      return Array.from(groups.values()).map((g, idx) => ({
+        stt: idx + 1,
+        ten_chi_tieu: g.ten_chi_tieu,
+        ma_so: g.ma_so,
+        so_vu: fmtNum(g.accidentCount),
+        so_vu_chet: fmtNum(g.fatalAccidentCount),
+        so_vu_2nn: fmtNum(g.multiVictimAccidentCount),
+        so_nn: fmtNum(g.victimCount),
+        nn_khong_ql: fmtNum(g.unmanagedCauseVictimCount),
+        nu_bi_nan: fmtNum(g.femaleVictimCount),
+        nu_khong_ql: fmtNum(g.unmanagedCauseFemaleVictimCount),
+        so_chet: fmtNum(g.deathCount),
+        chet_khong_ql: fmtNum(g.unmanagedCauseDeathCount),
+        thuong_nang: fmtNum(g.severelyInjuredCount),
+        thuong_nang_khong_ql: fmtNum(g.unmanagedCauseSeverelyInjuredCount),
+        chi_phi_yt: fmt(g.medicalCost),
+        chi_phi_luong: fmt(g.salaryCompensation),
+        boi_thuong: fmt(g.compensationCost),
+        thiet_hai_ts: fmt(g.assetDamage),
+        ngay_nghi: fmtNum(g.daysLost),
+      }));
+    };
+
+    const caseRows = groupBy(c => c.accidentCause);
+    const factorRows = groupBy(c => c.injuryFactor);
+    const occRows = groupBy(c => c.occupation);
+
+    const periodYear = report.reportPeriod?.year ?? new Date().getFullYear();
+    const periodType = report.reportPeriod?.periodType === 'HALF_YEAR' ? 'Kỳ I' : 'Cả năm';
+
+    const getSectionField = (section: Record<string, unknown> | undefined, field: string): number =>
+      Number(section?.[field] ?? 0);
+    const accTotal = (field: string) => getSectionField(accSection as Record<string, unknown>, field);
+    const allwTotal = (field: string) => getSectionField(allwSection as Record<string, unknown>, field);
+
+    const data = {
+      // Thông tin chung
+      ten_dn: report.enterprise?.name ?? '',
+      dia_chi: report.enterprise?.operatingAddress || report.enterprise?.registeredAddress || '',
+      ma_huyen: '', // Hiện tại DB không lưu mã huyện 4 số riêng biệt
+      nam: String(periodYear),
+      ky_bao_cao: periodType,
+      loai_hinh: report.enterprise?.businessType?.name ?? '',
+      ma_loai_hinh: report.enterprise?.businessType?.code ?? '',
+      linh_vuc: report.enterprise?.businessField?.name ?? '',
+      ma_linh_vuc: report.enterprise?.businessField?.code ?? '',
+
+      // Thông tin lao động
+      tong_lao_dong: fmtNum(report.companyEmployeeTotal),
+      lao_dong_nu: fmtNum(report.femaleEmployeeTotal),
+      quy_luong: fmt(Number(report.salaryFund)),
+
+      // Tổng quan TNLD
+      tnld_so_vu: fmtNum(accTotal('accidentCount')),
+      tnld_so_vu_chet: fmtNum(accTotal('fatalAccidentCount')),
+      tnld_so_vu_2nn: fmtNum(accTotal('multiVictimAccidentCount')),
+      tnld_so_nn: fmtNum(accTotal('victimCount')),
+      tnld_nn_khong_ql: fmtNum(accTotal('unmanagedCauseVictimCount')),
+      tnld_nu_bi_nan: fmtNum(accTotal('femaleVictimCount')),
+      tnld_nu_khong_ql: fmtNum(accTotal('unmanagedCauseFemaleVictimCount')),
+      tnld_so_chet: fmtNum(accTotal('deathCount')),
+      tnld_chet_khong_ql: fmtNum(accTotal('unmanagedCauseDeathCount')),
+      tnld_thuong_nang: fmtNum(accTotal('severelyInjuredCount')),
+      tnld_thuong_nang_khong_ql: fmtNum(accTotal('unmanagedCauseSeverelyInjuredCount')),
+      tnld_chi_phi_yt: fmt(accTotal('medicalCost')),
+      tnld_chi_phi_luong: fmt(accTotal('salaryCompensation')),
+      tnld_boi_thuong: fmt(accTotal('compensationCost')),
+      tnld_tong_chi_phi: fmt(accTotal('medicalCost') + accTotal('salaryCompensation') + accTotal('compensationCost')),
+      tnld_thiet_hai_ts: fmt(accTotal('assetDamage')),
+      tnld_ngay_nghi: fmtNum(accTotal('daysLost')),
+
+      // Trợ cấp (K2Đ39)
+      tc_so_vu: fmtNum(allwTotal('accidentCount')),
+      tc_so_vu_chet: fmtNum(allwTotal('fatalAccidentCount')),
+      tc_so_vu_2nn: fmtNum(allwTotal('multiVictimAccidentCount')),
+      tc_so_nn: fmtNum(allwTotal('victimCount')),
+      tc_nn_khong_ql: fmtNum(allwTotal('unmanagedCauseVictimCount')),
+      tc_nu_bi_nan: fmtNum(allwTotal('femaleVictimCount')),
+      tc_nu_khong_ql: fmtNum(allwTotal('unmanagedCauseFemaleVictimCount')),
+      tc_so_chet: fmtNum(allwTotal('deathCount')),
+      tc_chet_khong_ql: fmtNum(allwTotal('unmanagedCauseDeathCount')),
+      tc_thuong_nang: fmtNum(allwTotal('severelyInjuredCount')),
+      tc_thuong_nang_khong_ql: fmtNum(allwTotal('unmanagedCauseSeverelyInjuredCount')),
+      tc_chi_phi_yt: fmt(allwTotal('medicalCost')),
+      tc_chi_phi_luong: fmt(allwTotal('salaryCompensation')),
+      tc_boi_thuong: fmt(allwTotal('compensationCost')),
+      tc_tong_chi_phi: fmt(allwTotal('medicalCost') + allwTotal('salaryCompensation') + allwTotal('compensationCost')),
+      tc_thiet_hai_ts: fmt(allwTotal('assetDamage')),
+      tc_ngay_nghi: fmtNum(allwTotal('daysLost')),
+
+      // Tổng số (3=1+2) (ts_)
+      ts_so_vu: fmtNum(accTotal('accidentCount') + allwTotal('accidentCount')),
+      ts_so_vu_chet: fmtNum(accTotal('fatalAccidentCount') + allwTotal('fatalAccidentCount')),
+      ts_so_vu_2nn: fmtNum(accTotal('multiVictimAccidentCount') + allwTotal('multiVictimAccidentCount')),
+      ts_so_nn: fmtNum(accTotal('victimCount') + allwTotal('victimCount')),
+      ts_nn_khong_ql: fmtNum(accTotal('unmanagedCauseVictimCount') + allwTotal('unmanagedCauseVictimCount')),
+      ts_nu_bi_nan: fmtNum(accTotal('femaleVictimCount') + allwTotal('femaleVictimCount')),
+      ts_nu_khong_ql: fmtNum(accTotal('unmanagedCauseFemaleVictimCount') + allwTotal('unmanagedCauseFemaleVictimCount')),
+      ts_so_chet: fmtNum(accTotal('deathCount') + allwTotal('deathCount')),
+      ts_chet_khong_ql: fmtNum(accTotal('unmanagedCauseDeathCount') + allwTotal('unmanagedCauseDeathCount')),
+      ts_thuong_nang: fmtNum(accTotal('severelyInjuredCount') + allwTotal('severelyInjuredCount')),
+      ts_thuong_nang_khong_ql: fmtNum(accTotal('unmanagedCauseSeverelyInjuredCount') + allwTotal('unmanagedCauseSeverelyInjuredCount')),
+
+      // Chi tiết vụ tai nạn (loop)
+      chi_tiet: caseRows,
+      chi_tiet_yeu_to: factorRows,
+      chi_tiet_nghe: occRows,
+    };
+
+    const templatePath = path.join(process.cwd(), 'template_BC_TNLD.docx');
+    const content = fs.readFileSync(templatePath, 'binary');
+    const zip = new PizZip(content);
+    const doc = new Docxtemplater(zip, {
+      paragraphLoop: true,
+      linebreaks: true,
+    });
+
+    doc.render(data);
+
+    const buf = doc.getZip().generate({ type: 'nodebuffer' });
+    const fileName = `BC_TNLD_${report.enterprise?.name ?? 'doanh-nghiep'}_${periodYear}.docx`
+      .replace(/[\s/\\:*?"<>|]/g, '_');
+
+    return { buffer: buf, fileName };
   }
 }
