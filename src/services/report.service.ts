@@ -326,6 +326,11 @@ export class ReportService {
         const finalUnmanagedDeathCount = sectionDto.unmanagedCauseDeathCount !== undefined ? sectionDto.unmanagedCauseDeathCount : section.unmanagedCauseDeathCount;
         const finalUnmanagedSeverelyInjuredCount = sectionDto.unmanagedCauseSeverelyInjuredCount !== undefined ? sectionDto.unmanagedCauseSeverelyInjuredCount : section.unmanagedCauseSeverelyInjuredCount;
 
+        const finalMedicalCost = sectionDto.medicalCost !== undefined ? sectionDto.medicalCost : section.medicalCost;
+        const finalSalaryCompensation = sectionDto.salaryCompensation !== undefined ? sectionDto.salaryCompensation : section.salaryCompensation;
+        const finalCompensationCost = sectionDto.compensationCost !== undefined ? sectionDto.compensationCost : section.compensationCost;
+        const finalAssetDamage = sectionDto.assetDamage !== undefined ? sectionDto.assetDamage : section.assetDamage;
+
         // (1) Số vụ chết người & số vụ có 2 người bị nạn trở lên <= tổng số vụ
         if (finalFatalAccidentCount > finalAccidentCount) {
           throw new BadRequestException(
@@ -372,11 +377,51 @@ export class ReportService {
           );
         }
 
-        // (5) Số lượng chi tiết (accidentCases) phải bằng tổng số vụ đã khai
-        if (sectionDto.accidentCases !== undefined && sectionDto.accidentCases.length !== finalAccidentCount) {
-          throw new BadRequestException(
-            `Số lượng chi tiết vụ tai nạn (${sectionDto.accidentCases.length}) phải bằng tổng số vụ tai nạn đã khai (${finalAccidentCount}) trong phần ${sectionLabel}`,
-          );
+        // (5) Tổng của các trường từ chi tiết phải bằng tổng số đã khai báo
+        if (sectionDto.accidentCases !== undefined) {
+          const sumAccidentCount = sectionDto.accidentCases.reduce((sum, c) => sum + (c.accidentCount ?? 0), 0);
+          const sumVictimCount = sectionDto.accidentCases.reduce((sum, c) => sum + (c.victimCount ?? 0), 0);
+          const sumUnmanagedVictims = sectionDto.accidentCases.reduce((sum, c) => sum + (c.unmanagedCauseVictimCount ?? 0), 0);
+          const sumMedicalCost = sectionDto.accidentCases.reduce((sum, c) => sum + (Number(c.medicalCost) || 0), 0);
+          const sumSalaryCompensation = sectionDto.accidentCases.reduce((sum, c) => sum + (Number(c.salaryCompensation) || 0), 0);
+          const sumCompensationCost = sectionDto.accidentCases.reduce((sum, c) => sum + (Number(c.compensationCost) || 0), 0);
+          const sumAssetDamage = sectionDto.accidentCases.reduce((sum, c) => sum + (Number(c.assetDamage) || 0), 0);
+
+          if (sumAccidentCount !== finalAccidentCount) {
+            throw new BadRequestException(
+              `Tổng số vụ từ các chi tiết (${sumAccidentCount}) phải bằng tổng số vụ đã khai (${finalAccidentCount}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumVictimCount !== finalVictims) {
+            throw new BadRequestException(
+              `Tổng số người bị nạn từ các chi tiết (${sumVictimCount}) phải bằng tổng số người bị nạn đã khai (${finalVictims}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumUnmanagedVictims !== finalUnmanagedVictims) {
+            throw new BadRequestException(
+              `Tổng số người bị nạn không quản lý từ các chi tiết (${sumUnmanagedVictims}) phải bằng tổng số người bị nạn không quản lý đã khai (${finalUnmanagedVictims}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumMedicalCost !== Number(finalMedicalCost || 0)) {
+            throw new BadRequestException(
+              `Tổng chi phí y tế từ các chi tiết (${sumMedicalCost}) phải bằng chi phí y tế đã khai (${finalMedicalCost}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumSalaryCompensation !== Number(finalSalaryCompensation || 0)) {
+            throw new BadRequestException(
+              `Tổng trả lương y tế từ các chi tiết (${sumSalaryCompensation}) phải bằng trả lương y tế đã khai (${finalSalaryCompensation}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumCompensationCost !== Number(finalCompensationCost || 0)) {
+            throw new BadRequestException(
+              `Tổng bồi thường/trợ cấp từ các chi tiết (${sumCompensationCost}) phải bằng bồi thường/trợ cấp đã khai (${finalCompensationCost}) trong phần ${sectionLabel}`,
+            );
+          }
+          if (sumAssetDamage !== Number(finalAssetDamage || 0)) {
+            throw new BadRequestException(
+              `Tổng thiệt hại tài sản từ các chi tiết (${sumAssetDamage}) phải bằng thiệt hại tài sản đã khai (${finalAssetDamage}) trong phần ${sectionLabel}`,
+            );
+          }
         }
 
         // Cập nhật aggregate
@@ -548,6 +593,12 @@ export class ReportService {
     ) {
       throw new BadRequestException(
         'Chỉ có thể nộp báo cáo ở trạng thái Nháp hoặc Bị từ chối',
+      );
+    }
+
+    if (!report.attachedFilePath) {
+      throw new BadRequestException(
+        'Vui lòng đính kèm file báo cáo có dấu mộc trước khi nộp',
       );
     }
 
