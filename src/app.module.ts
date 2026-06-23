@@ -12,6 +12,7 @@ import { BusinessFieldController } from './controllers/business-field.controller
 import { EnterpriseController } from './controllers/enterprise.controller';
 import { EnterpriseRegistrationController } from './controllers/enterprise-registration.controller';
 import { ReportController } from './controllers/report.controller';
+import { ReportPeriodController } from './controllers/report-period.controller';
 
 // Services
 import { AuthService } from './services/auth.service';
@@ -23,6 +24,7 @@ import { EnterpriseService } from './services/enterprise.service';
 import { UserService } from './services/user.service';
 import { EnterpriseRegistrationService } from './services/enterprise-registration.service';
 import { ReportService } from './services/report.service';
+import { ReportPeriodService } from './services/report-period.service';
 
 // Repositories
 import { PrismaService } from './repositories/prisma.service';
@@ -32,6 +34,7 @@ import { EmailChangeOtpRepository } from './repositories/email-change-otp.reposi
 import { BusinessTypeRepository } from './repositories/business-type.repository';
 import { BusinessFieldRepository } from './repositories/business-field.repository';
 import { EnterpriseRepository } from './repositories/enterprise.repository';
+import { ReportPeriodRepository } from './repositories/report-period.repository';
 
 // Strategies
 import { JwtStrategy } from './common/strategies/jwt.strategy';
@@ -53,6 +56,7 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
     EnterpriseController,
     EnterpriseRegistrationController,
     ReportController,
+    ReportPeriodController,
   ],
   providers: [
     AuthService,
@@ -64,6 +68,7 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
     BusinessFieldService,
     EnterpriseService,
     UserService,
+    ReportPeriodService,
     PrismaService,
     UserRepository,
     PasswordResetRepository,
@@ -71,7 +76,8 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
     BusinessTypeRepository,
     BusinessFieldRepository,
     EnterpriseRepository,
+    ReportPeriodRepository,
     JwtStrategy,
   ],
 })
-export class AppModule {}
+export class AppModule { }
