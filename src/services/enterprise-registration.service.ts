@@ -245,12 +245,14 @@ export class EnterpriseRegistrationService {
       },
     });
 
-    // 12. Gửi email chứa mã OTP xác thực
-    await this.mailService.sendEnterpriseRegistrationOtpEmail(
+    // 12. Gửi email chứa mã OTP xác thực (không await để tránh block request/timeout)
+    this.mailService.sendEnterpriseRegistrationOtpEmail(
       cleanEmail,
       dto.name.trim(),
       otp,
-    );
+    ).catch(err => {
+      console.error(`Failed to send OTP to ${cleanEmail}:`, err);
+    });
 
     console.log(
       `\n🔑 [DEV ONLY] Mã OTP đăng ký doanh nghiệp của ${cleanEmail} là: ${otp}\n`,
