@@ -619,6 +619,10 @@ export class ReportService {
     reportId: number,
     file: Express.Multer.File,
   ) {
+    if (file.mimetype !== 'application/pdf') {
+      throw new BadRequestException('Chỉ chấp nhận đính kèm file định dạng PDF');
+    }
+
     const enterprise = await this.getEnterpriseByUserId(userId);
 
     const report = await this.prisma.report.findUnique({
