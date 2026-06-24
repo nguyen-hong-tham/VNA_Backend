@@ -38,7 +38,7 @@ import { ReportPeriodRepository } from './repositories/report-period.repository'
 
 // Strategies
 import { JwtStrategy } from './common/strategies/jwt.strategy';
-
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -46,6 +46,7 @@ import { JwtStrategy } from './common/strategies/jwt.strategy';
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({}),
+    ScheduleModule.forRoot(),
   ],
   controllers: [
     AuthController,
