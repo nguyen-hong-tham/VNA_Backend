@@ -77,9 +77,26 @@ export class DepartmentReportService {
     return this.reportRepo.getStatisticsByWard(provinceId, year, periodType);
   }
 
-  // Lấy danh sách năm báo cáo từ min đến max
-  async getReportYears() {
-    return this.reportRepo.getReportYears();
+  async getFilterOptions() {
+    const years = await this.reportRepo.getReportYears();
+
+    const periodTypes = [
+      {
+        value: 'HALF_YEAR', label: '6 tháng'
+      },
+      {
+        value: 'YEAR', label: '1 năm'
+      }
+    ]
+    const statuses = [
+      { value: 'REPORTING', label: 'Đang báo cáo' },
+      { value: 'APPROVED', label: 'Đã tiếp nhận' },
+    ];
+    return {
+      years,       // Trả về: [2023, 2024, 2025, ...]
+      periodTypes, // Trả về: [{ value: 'HALF_YEAR', label: '6 tháng' }, ...]
+      statuses,    // Trả về: [{ value: 'REPORTING', label: 'Đang báo cáo' }, ...]
+    };
   }
 
 }
