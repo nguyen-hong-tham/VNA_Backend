@@ -69,13 +69,13 @@ export class ReportPeriodRepository {
             where: { id },
         });
     }
-    // Tìm kiếm kỳ báo cáo bằng khóa duy nhất kết hợp giữa Năm (year) và Loại kỳ (periodType)
-    // Do thiết kế cơ sở dữ liệu, một năm chỉ được phép có tối đa 1 kỳ báo cáo Cả năm (YEAR) và tối đa 2 kỳ báo cáo 6 tháng (HALF_YEAR). Database đã chặn trùng bằng ràng buộc duy nhất @@unique([year, periodType]).
-    // Hàm này được Service gọi lên trước khi tạo mới hoặc cập nhật thông tin kỳ báo cáo nhằm kiểm tra xem cặp (Năm + Loại kỳ) này đã tồn tại hay chưa. Nếu đã tồn tại, Service sẽ ném ra lỗi 409 Conflict (Tr
-    async findUniqueYearPeriod(year: number, periodType: PeriodType) {
+    // Tìm kiếm kỳ báo cáo bằng khóa duy nhất kết hợp giữa Năm (year), Loại kỳ (periodType) và Ngày bắt đầu (startDate)
+    // Do thiết kế cơ sở dữ liệu, một năm chỉ được phép có tối đa 1 kỳ báo cáo Cả năm (YEAR) và tối đa 2 kỳ báo cáo 6 tháng (HALF_YEAR). Database đã chặn trùng bằng ràng buộc duy nhất @@unique([year, periodType, startDate]).
+    // Hàm này được Service gọi lên trước khi tạo mới hoặc cập nhật thông tin kỳ báo cáo nhằm kiểm tra xem cặp (Năm + Loại kỳ + Ngày bắt đầu) này đã tồn tại hay chưa. Nếu đã tồn tại, Service sẽ ném ra lỗi 409 Conflict.
+    async findUniqueYearPeriod(year: number, periodType: PeriodType, startDate: Date) {
         return this.prisma.reportPeriod.findUnique({
             where: {
-                uq_report_period: { year, periodType },
+                uq_report_period: { year, periodType, startDate },
             },
         });
     }
@@ -105,6 +105,13 @@ export class ReportPeriodRepository {
             where: { reportPeriodId: id },
         });
         return count > 0;
+    }
+
+    // tìm kiếm kì báo cáo theo năm và loại kì báo cáo để kiểm tra trùng lặp
+    async findByYearAndType(year: number, periodType: PeriodType) {
+        return this.prisma.reportPeriod.findFirst({
+            where: { year, periodType },
+        });
     }
 }
 

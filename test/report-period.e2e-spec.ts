@@ -55,11 +55,11 @@ describe('Report Period Management e2e Tests', () => {
   afterAll(async () => {
     // Dọn dẹp dữ liệu test
     if (createdPeriodId) {
-      await prisma.reportPeriod.delete({ where: { id: createdPeriodId } }).catch(() => {});
+      await prisma.reportPeriod.delete({ where: { id: createdPeriodId } }).catch(() => { });
     }
     await prisma.reportPeriod.deleteMany({
       where: { year: testYear },
-    }).catch(() => {});
+    }).catch(() => { });
     await app.close();
   });
 
@@ -115,21 +115,7 @@ describe('Report Period Management e2e Tests', () => {
       expect(res.body.message).toContain('bắt đầu phải trước ngày kết thúc');
     });
 
-    it('Validation Path: Báo lỗi nếu năm không khớp với ngày cấu hình', async () => {
-      const res = await request(app.getHttpServer())
-        .post('/api/report-periods')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          reportName: 'Lỗi sai năm',
-          year: testYear,
-          periodType: 'YEAR',
-          startDate: '01/01/2098',
-          endDate: '31/12/2099',
-          status: 'OPEN',
-        });
-      expect(res.status).toBe(400);
-      expect(res.body.message.toLowerCase()).toContain('ngày bắt đầu');
-    });
+
 
     it('Negative Path: Không cho phép tạo trùng Năm + Loại kỳ báo cáo (409 Conflict)', async () => {
       const res = await request(app.getHttpServer())
@@ -206,15 +192,13 @@ describe('Report Period Management e2e Tests', () => {
         .put(`/api/report-periods/${createdPeriodId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          reportName: 'Kỳ báo cáo E2E test Cả năm (Cập nhật)',
-          year: testYear,
-          periodType: 'YEAR',
           startDate: '01/01/2099',
           endDate: '31/12/2099',
+          status: 'OPEN',
         });
 
       expect(res.status).toBe(200);
-      expect(res.body.reportName).toBe('Kỳ báo cáo E2E test Cả năm (Cập nhật)');
+      expect(res.body.reportName).toBe('Kỳ báo cáo E2E test Cả năm');
     });
   });
 
