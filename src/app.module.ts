@@ -13,6 +13,7 @@ import { EnterpriseController } from './controllers/enterprise.controller';
 import { EnterpriseRegistrationController } from './controllers/enterprise-registration.controller';
 import { ReportController } from './controllers/report.controller';
 import { ReportPeriodController } from './controllers/report-period.controller';
+import { CategoryController } from './controllers/category.controller';
 
 // Services
 import { AuthService } from './services/auth.service';
@@ -25,6 +26,7 @@ import { UserService } from './services/user.service';
 import { EnterpriseRegistrationService } from './services/enterprise-registration.service';
 import { ReportService } from './services/report.service';
 import { ReportPeriodService } from './services/report-period.service';
+import { CategoryService } from './services/category.service';
 
 // Repositories
 import { PrismaService } from './repositories/prisma.service';
@@ -35,6 +37,7 @@ import { BusinessTypeRepository } from './repositories/business-type.repository'
 import { BusinessFieldRepository } from './repositories/business-field.repository';
 import { EnterpriseRepository } from './repositories/enterprise.repository';
 import { ReportPeriodRepository } from './repositories/report-period.repository';
+import { CategoryRepository } from './repositories/category.repository';
 
 // Strategies
 import { JwtStrategy } from './common/strategies/jwt.strategy';
@@ -58,6 +61,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     EnterpriseRegistrationController,
     ReportController,
     ReportPeriodController,
+    CategoryController,
   ],
   providers: [
     AuthService,
@@ -70,6 +74,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     EnterpriseService,
     UserService,
     ReportPeriodService,
+    CategoryService,
     PrismaService,
     UserRepository,
     PasswordResetRepository,
@@ -78,7 +83,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     BusinessFieldRepository,
     EnterpriseRepository,
     ReportPeriodRepository,
+    CategoryRepository,
     JwtStrategy,
   ],
 })
-export class AppModule { }
+export class AppModule {}
