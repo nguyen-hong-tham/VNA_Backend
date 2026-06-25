@@ -45,10 +45,10 @@ export class ReportPeriodRepository {
             where.status = filter.status;
         }
         if (filter.startDate !== undefined) {
-            where.startDate = filter.startDate;
+            where.startDate = { gte: filter.startDate };
         }
         if (filter.endDate !== undefined) {
-            where.endDate = filter.endDate;
+            where.endDate = { lte: filter.endDate };
         }
         // đếm tổng số bảng ghi
         const [data, total] = await Promise.all([
