@@ -97,13 +97,14 @@ export class ReportController {
 
   // GET /reports/:id
   @Get(':id')
+  @Roles('ENTERPRISE', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Lấy chi tiết báo cáo theo ID' })
   @ApiResponse({ status: 200, description: 'Chi tiết báo cáo' })
   getReportDetails(
     @Req() req: AuthenticatedRequest,
     @Param('id', ParseIntPipe) id: number,
   ) {
-    return this.reportService.getReportDetails(req.user.id, id);
+    return this.reportService.getReportDetails(req.user.id, id, req.user.role?.code);
   }
 
   // PUT /reports/:id
@@ -161,6 +162,7 @@ export class ReportController {
 
   // GET /reports/:id/export-word
   @Get(':id/export-word')
+  @Roles('ENTERPRISE', 'ADMIN', 'MANAGER')
   @ApiOperation({ summary: 'Xuất báo cáo ra file Word (.docx)' })
   @ApiResponse({ status: 200, description: 'File Word báo cáo' })
   async exportWordReport(
@@ -168,7 +170,7 @@ export class ReportController {
     @Param('id', ParseIntPipe) id: number,
     @Res() res: import('express').Response,
   ) {
-    const { buffer, fileName } = await this.reportService.exportWordReport(req.user.id, id);
+    const { buffer, fileName } = await this.reportService.exportWordReport(req.user.id, id, req.user.role?.code);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`);
     res.send(buffer);
