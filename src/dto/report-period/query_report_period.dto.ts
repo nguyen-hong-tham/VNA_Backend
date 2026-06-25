@@ -26,13 +26,13 @@ const transformStringToDate = ({ value }: { value: any }) => {
     const month = parseInt(parts[1], 10);
     const year = parseInt(parts[2], 10);
 
-    const date = new Date(year, month - 1, day);
+    const date = new Date(Date.UTC(year, month - 1, day));
 
     // kiểm tra tính hợp lệ của ngày thực tế 
     if (
-        date.getFullYear() !== year ||
-        date.getMonth() !== month - 1 ||
-        date.getDate() !== day
+        date.getUTCFullYear() !== year ||
+        date.getUTCMonth() !== month - 1 ||
+        date.getUTCDate() !== day
     ) {
         return new Date('invalid'); // Ngày không hợp lệ
     }
@@ -64,14 +64,14 @@ export class QueryReportPeriodDto {
     periodType?: PeriodType;
 
     // loc theo thoi gian bat dau
-    @ApiPropertyOptional({ example: '01/01/2026', description: 'Lọc từ ngày bắt đầu kỳ (Định dạng DD/MM/YYYY)' })
+    @ApiPropertyOptional({ type: String, example: '01/01/2026', description: 'Lọc từ ngày bắt đầu kỳ (Định dạng DD/MM/YYYY)' })
     @IsOptional()
     @Transform(transformStringToDate)
     @IsDate({ message: 'Ngày bắt đầu lọc không đúng định dạng hoặc không hợp lệ (DD/MM/YYYY)' })
     startDate?: Date;
 
     // loc theo thoi gian ket thuc
-    @ApiPropertyOptional({ example: '31/12/2026', description: 'Lọc đến ngày kết thúc kỳ (Định dạng DD/MM/YYYY)' })
+    @ApiPropertyOptional({ type: String, example: '31/12/2026', description: 'Lọc đến ngày kết thúc kỳ (Định dạng DD/MM/YYYY)' })
     @IsOptional()
     @Transform(transformStringToDate)
     @IsDate({ message: 'Ngày kết thúc lọc không đúng định dạng hoặc không hợp lệ (DD/MM/YYYY)' })

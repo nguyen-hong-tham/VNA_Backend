@@ -176,7 +176,7 @@ export class ReportService {
         data: {
           enterpriseId: enterprise.id,
           reportPeriodId: periodId,
-          status: ReportStatus.DRAFT,
+          status: ReportStatus.REPORTING,
           createdBy: userId,
         },
       });
@@ -264,7 +264,7 @@ export class ReportService {
     }
 
     if (
-      report.status !== ReportStatus.DRAFT &&
+      report.status !== ReportStatus.REPORTING &&
       report.status !== ReportStatus.REJECTED
     ) {
       throw new BadRequestException(
@@ -677,7 +677,7 @@ export class ReportService {
     }
 
     if (
-      report.status !== ReportStatus.DRAFT &&
+      report.status !== ReportStatus.REPORTING &&
       report.status !== ReportStatus.REJECTED
     ) {
       throw new BadRequestException(

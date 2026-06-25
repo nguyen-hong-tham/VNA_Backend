@@ -13,6 +13,7 @@ import { EnterpriseController } from './controllers/enterprise.controller';
 import { EnterpriseRegistrationController } from './controllers/enterprise-registration.controller';
 import { ReportController } from './controllers/report.controller';
 import { ReportPeriodController } from './controllers/report-period.controller';
+import { DepartmentReportController } from './controllers/department-report.controller';
 import { CategoryController } from './controllers/category.controller';
 
 // Services
@@ -26,8 +27,8 @@ import { UserService } from './services/user.service';
 import { EnterpriseRegistrationService } from './services/enterprise-registration.service';
 import { ReportService } from './services/report.service';
 import { ReportPeriodService } from './services/report-period.service';
+import { DepartmentReportService } from './services/department-report.service';
 import { CategoryService } from './services/category.service';
-
 // Repositories
 import { PrismaService } from './repositories/prisma.service';
 import { UserRepository } from './repositories/user.repository';
@@ -37,8 +38,8 @@ import { BusinessTypeRepository } from './repositories/business-type.repository'
 import { BusinessFieldRepository } from './repositories/business-field.repository';
 import { EnterpriseRepository } from './repositories/enterprise.repository';
 import { ReportPeriodRepository } from './repositories/report-period.repository';
+import { DepartmentReportRepository } from './repositories/department-report.repository';
 import { CategoryRepository } from './repositories/category.repository';
-
 // Strategies
 import { JwtStrategy } from './common/strategies/jwt.strategy';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -61,6 +62,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     EnterpriseRegistrationController,
     ReportController,
     ReportPeriodController,
+    DepartmentReportController,
     CategoryController,
   ],
   providers: [
@@ -74,6 +76,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     EnterpriseService,
     UserService,
     ReportPeriodService,
+    DepartmentReportService,
     CategoryService,
     PrismaService,
     UserRepository,
@@ -85,6 +88,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ReportPeriodRepository,
     CategoryRepository,
     JwtStrategy,
+    DepartmentReportRepository,
   ],
 })
 export class AppModule {}
