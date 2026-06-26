@@ -15,7 +15,7 @@ import { ReportController } from './controllers/report.controller';
 import { ReportPeriodController } from './controllers/report-period.controller';
 import { DepartmentReportController } from './controllers/department-report.controller';
 import { CategoryController } from './controllers/category.controller';
-
+import { SummaryReportController } from './controllers/summary-report.controller';
 // Services
 import { AuthService } from './services/auth.service';
 import { MailService } from './services/mail.service';
@@ -29,6 +29,7 @@ import { ReportService } from './services/report.service';
 import { ReportPeriodService } from './services/report-period.service';
 import { DepartmentReportService } from './services/department-report.service';
 import { CategoryService } from './services/category.service';
+import { SummaryReportService } from './services/summary-report.service';
 // Repositories
 import { PrismaService } from './repositories/prisma.service';
 import { UserRepository } from './repositories/user.repository';
@@ -61,9 +62,9 @@ import { ScheduleModule } from '@nestjs/schedule';
     EnterpriseController,
     EnterpriseRegistrationController,
     ReportController,
-    ReportPeriodController,
     DepartmentReportController,
     CategoryController,
+    SummaryReportController,
   ],
   providers: [
     AuthService,
@@ -89,6 +90,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     CategoryRepository,
     JwtStrategy,
     DepartmentReportRepository,
+    SummaryReportService,
   ],
 })
-export class AppModule {}
+export class AppModule { }
