@@ -133,6 +133,10 @@ async function main() {
     { code: '140', name: 'Công ty hợp danh' },
     { code: '110', name: 'Doanh nghiệp nhà nước' },
     { code: '160', name: 'Công ty cổ phần' },
+    { code: '170', name: 'Doanh nghiệp có vốn đầu tư nước ngoài' },
+    { code: '180', name: 'Đơn vị kinh tế tập thể' },
+    { code: '190', name: 'Đơn vị kinh tế cá thể' },
+    { code: '200', name: 'Đơn vị hành chính sự nghiệp, Đảng, đoàn thể, hiệp hội' },
   ];
 
   const businessTypeCodeToIdMap: Record<string, number> = {};
