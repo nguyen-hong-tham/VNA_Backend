@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { BusinessTypeCode } from '../src/constants/business-type.constant';
 
 const prisma = new PrismaClient();
 
@@ -127,16 +128,16 @@ async function main() {
   // BUSINESS TYPES (6 records matching database screenshot)
   // ==================================================
   const businessTypeData = [
-    { code: '150', name: 'Doanh nghiệp tư nhân' },
-    { code: '120', name: 'Công ty TNHH 1 Thành viên' },
-    { code: '130', name: 'Công ty TNHH 2 Thành viên' },
-    { code: '140', name: 'Công ty hợp danh' },
-    { code: '110', name: 'Doanh nghiệp nhà nước' },
-    { code: '160', name: 'Công ty cổ phần' },
-    { code: '170', name: 'Doanh nghiệp có vốn đầu tư nước ngoài' },
-    { code: '180', name: 'Đơn vị kinh tế tập thể' },
-    { code: '190', name: 'Đơn vị kinh tế cá thể' },
-    { code: '200', name: 'Đơn vị hành chính sự nghiệp, Đảng, đoàn thể, hiệp hội' },
+    { code: BusinessTypeCode.PRIVATE_ENTERPRISE, name: 'Doanh nghiệp tư nhân' },
+    { code: BusinessTypeCode.TNHH_1TV, name: 'Công ty TNHH 1 Thành viên' },
+    { code: BusinessTypeCode.TNHH_2TV, name: 'Công ty TNHH 2 Thành viên' },
+    { code: BusinessTypeCode.PARTNERSHIP, name: 'Công ty hợp danh' },
+    { code: BusinessTypeCode.STATE_OWNED, name: 'Doanh nghiệp nhà nước' },
+    { code: BusinessTypeCode.JOINT_STOCK, name: 'Công ty cổ phần' },
+    { code: BusinessTypeCode.FOREIGN_INVESTED, name: 'Doanh nghiệp có vốn đầu tư nước ngoài' },
+    { code: BusinessTypeCode.COOPERATIVE, name: 'Đơn vị kinh tế tập thể' },
+    { code: BusinessTypeCode.INDIVIDUAL_HOUSEHOLD, name: 'Đơn vị kinh tế cá thể' },
+    { code: BusinessTypeCode.ADMINISTRATIVE, name: 'Đơn vị hành chính sự nghiệp, Đảng, đoàn thể, hiệp hội' },
   ];
 
   const businessTypeCodeToIdMap: Record<string, number> = {};
@@ -596,7 +597,7 @@ async function main() {
       taxCode: '0312345671',
       licenseNumber: 'GPD1000001',
       name: 'Công ty TNHH ABC',
-      businessTypeId: businessTypeCodeToIdMap['120'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.TNHH_1TV] || 1,
       businessFieldId: codeToIdMap['10'] || 1,
       registeredAddress: 'Quận 1, TP.HCM',
       representativeName: 'Nguyễn Văn A',
@@ -611,7 +612,7 @@ async function main() {
       taxCode: '0312345672',
       licenseNumber: 'GPD1000002',
       name: 'Công ty Cổ phần XYZ',
-      businessTypeId: businessTypeCodeToIdMap['160'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.JOINT_STOCK] || 1,
       businessFieldId: codeToIdMap['011'] || 1,
       registeredAddress: 'Quận 3, TP.HCM',
       representativeName: 'Trần Thị B',
@@ -626,7 +627,7 @@ async function main() {
       taxCode: '0312345673',
       licenseNumber: 'GPD1000003',
       name: 'Hợp tác xã Nông nghiệp Xanh',
-      businessTypeId: businessTypes[2].id,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.COOPERATIVE] || 1,
       businessFieldId: codeToIdMap['01'] || 1,
       registeredAddress: 'Huyện Củ Chi, TP.HCM',
       representativeName: 'Lê Văn C',
@@ -641,7 +642,7 @@ async function main() {
       taxCode: '0312345674',
       licenseNumber: 'GPD1000004',
       name: 'Công ty TNHH MTV Khai Thác Mỏ',
-      businessTypeId: businessTypeCodeToIdMap['110'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.STATE_OWNED] || 1,
       businessFieldId: codeToIdMap['05'] || 1,
       registeredAddress: 'Quảng Ninh',
       representativeName: 'Phạm Thị D',
@@ -656,7 +657,7 @@ async function main() {
       taxCode: '0312345675',
       licenseNumber: 'GPD1000005',
       name: 'Công ty Vận tải Đông Nam',
-      businessTypeId: businessTypeCodeToIdMap['160'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.JOINT_STOCK] || 1,
       businessFieldId: codeToIdMap['03'] || 1,
       registeredAddress: 'Bình Dương',
       representativeName: 'Hoàng Văn E',
@@ -671,7 +672,7 @@ async function main() {
       taxCode: '0312345676',
       licenseNumber: 'GPD1000006',
       name: 'Công ty Dệt May Phương Nam',
-      businessTypeId: businessTypeCodeToIdMap['160'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.JOINT_STOCK] || 1,
       businessFieldId: codeToIdMap['10'] || 1,
       registeredAddress: 'Long An',
       representativeName: 'Vũ Thị F',
@@ -686,7 +687,7 @@ async function main() {
       taxCode: '0312345677',
       licenseNumber: 'GPD1000007',
       name: 'Công ty Chế Biến Thực Phẩm Sao Mai',
-      businessTypeId: businessTypeCodeToIdMap['120'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.TNHH_1TV] || 1,
       businessFieldId: codeToIdMap['101'] || 1,
       registeredAddress: 'Tiền Giang',
       representativeName: 'Đặng Văn G',
@@ -702,7 +703,7 @@ async function main() {
       taxCode: '0312345678',
       licenseNumber: 'GPD1000008',
       name: 'Công ty Xây Dựng Tiến Phát',
-      businessTypeId: businessTypeCodeToIdMap['160'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.JOINT_STOCK] || 1,
       businessFieldId: codeToIdMap['106'] || 1,
       registeredAddress: 'Đồng Nai',
       representativeName: 'Bùi Thị H',
@@ -717,7 +718,7 @@ async function main() {
       taxCode: '0312345679',
       licenseNumber: 'GPD1000009',
       name: 'Công ty Khai Thác Than Hồng Hà',
-      businessTypeId: businessTypeCodeToIdMap['110'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.STATE_OWNED] || 1,
       businessFieldId: codeToIdMap['0510'] || 1,
       registeredAddress: 'Quảng Ngãi',
       representativeName: 'Ngô Văn I',
