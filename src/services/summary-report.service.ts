@@ -5,6 +5,7 @@ import { QuerySummaryReportDto } from '../dto/report_department/query-summary-re
 import { BusinessTypeCode } from '../constants/business-type.constant';
 
 export interface SummaryReportItem {
+    // phần 1
     stt: number,
     loaiHinh: string,
     maSo: string,
@@ -20,6 +21,25 @@ export interface SummaryReportItem {
     kChet: string,// tân suất chết
     ghiChu: string,
 }
+export interface SummaryAccidentClassifiedItem {
+    stt: number;
+    tenDanhMuc: string;
+    maDanhMuc: string;
+    soVu: number;
+    soVuCoNguoiChet: number;
+    soVuCoNhieuNguoiBiNan: number;
+    soNguoiBiNan: number;
+    soNguoiBiNanNu: number;
+    soNguoiChet: number;
+    soNguoiBiThuongNang: number;
+    soNgayNghi: number;
+    yTe: number;
+    traLuong: number;
+    boiThuong: number;
+    thietHaiTaiSan: number;
+}
+
+
 
 @Injectable()
 export class SummaryReportService {

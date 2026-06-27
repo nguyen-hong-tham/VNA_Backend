@@ -30,6 +30,7 @@ import { ReportPeriodService } from './services/report-period.service';
 import { DepartmentReportService } from './services/department-report.service';
 import { CategoryService } from './services/category.service';
 import { SummaryReportService } from './services/summary-report.service';
+import { AccidentClassificationService } from './services/accident-classification.service';
 // Repositories
 import { PrismaService } from './repositories/prisma.service';
 import { UserRepository } from './repositories/user.repository';
@@ -91,6 +92,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     JwtStrategy,
     DepartmentReportRepository,
     SummaryReportService,
+    AccidentClassificationService,
   ],
 })
 export class AppModule { }
