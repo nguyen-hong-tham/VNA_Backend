@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../repositories/prisma.service';
-import { SectionType, ReportStatus, EnterpriseStatus } from '@prisma/client';
+import { SectionType, ReportStatus, EnterpriseStatus, PeriodType } from '@prisma/client';
 import { QuerySummaryReportDto } from '../dto/report_department/query-summary-report.dto';
+import { BusinessTypeCode } from '../constants/business-type.constant';
 
 export interface SummaryReportItem {
     stt: number,
@@ -31,15 +32,15 @@ export class SummaryReportService {
 
         // 1. Định nghĩa cấu trúc các nhóm loại hình doanh nghiệp (đúng 9 nhóm theo yêu cầu)
         const groupsConfig = [
-            { key: 'NHA_NUOC', name: 'Doanh nghiệp nhà nước', code: '01', dbCodes: ['110', 'STATE_OWNED'] },
-            { key: 'TNHH', name: 'Công ty trách nhiệm hữu hạn', code: '02', dbCodes: ['120', '130', 'TNHH1', 'TNHH2', 'COMPANY', 'ONE_MEMBER'] },
-            { key: 'CO_PHAN', name: 'Công ty cổ phần', code: '03', dbCodes: ['160', 'CP', 'JOINT_STOCK'] },
-            { key: 'HOP_DANH', name: 'Công ty hợp danh', code: '04', dbCodes: ['140', 'PARTNERSHIP'] },
-            { key: 'TU_NHAN', name: 'Doanh nghiệp tư nhân', code: '05', dbCodes: ['150', 'DNTN', 'PRIVATE'] },
-            { key: 'FDI', name: 'Doanh nghiệp có vốn đầu tư nước ngoài', code: '06', dbCodes: ['170', 'FOREIGN'] },
-            { key: 'TAP_THE', name: 'Đơn vị kinh tế tập thể', code: '07', dbCodes: ['180', 'HTX', 'COOPERATIVE', 'ASSOCIATION'] },
-            { key: 'CA_THE', name: 'Đơn vị kinh tế cá thể', code: '08', dbCodes: ['190', 'HOUSEHOLD'] },
-            { key: 'HANH_CHINH', name: 'Đơn vị hành chính sự nghiệp, Đảng, đoàn thể, hiệp hội', code: '09', dbCodes: ['200'] },
+            { key: 'NHA_NUOC', name: 'Doanh nghiệp nhà nước', code: '01', dbCodes: [BusinessTypeCode.STATE_OWNED, 'STATE_OWNED'] },
+            { key: 'TNHH', name: 'Công ty trách nhiệm hữu hạn', code: '02', dbCodes: [BusinessTypeCode.TNHH_1TV, BusinessTypeCode.TNHH_2TV, 'TNHH1', 'TNHH2', 'COMPANY', 'ONE_MEMBER'] },
+            { key: 'CO_PHAN', name: 'Công ty cổ phần', code: '03', dbCodes: [BusinessTypeCode.JOINT_STOCK, 'CP', 'JOINT_STOCK'] },
+            { key: 'HOP_DANH', name: 'Công ty hợp danh', code: '04', dbCodes: [BusinessTypeCode.PARTNERSHIP, 'PARTNERSHIP'] },
+            { key: 'TU_NHAN', name: 'Doanh nghiệp tư nhân', code: '05', dbCodes: [BusinessTypeCode.PRIVATE_ENTERPRISE, 'DNTN', 'PRIVATE'] },
+            { key: 'FDI', name: 'Doanh nghiệp có vốn đầu tư nước ngoài', code: '06', dbCodes: [BusinessTypeCode.FOREIGN_INVESTED, 'FOREIGN'] },
+            { key: 'TAP_THE', name: 'Đơn vị kinh tế tập thể', code: '07', dbCodes: [BusinessTypeCode.COOPERATIVE, 'HTX', 'COOPERATIVE', 'ASSOCIATION'] },
+            { key: 'CA_THE', name: 'Đơn vị kinh tế cá thể', code: '08', dbCodes: [BusinessTypeCode.INDIVIDUAL_HOUSEHOLD, 'HOUSEHOLD'] },
+            { key: 'HANH_CHINH', name: 'Đơn vị hành chính sự nghiệp, Đảng, đoàn thể, hiệp hội', code: '09', dbCodes: [BusinessTypeCode.ADMINISTRATIVE] },
         ];
 
         // 2. Lấy tất cả doanh nghiệp được duyệt hoạt động (APPROVED) thuộc tỉnh đã chọn
@@ -47,11 +48,19 @@ export class SummaryReportService {
             where: {
                 provinceId,
                 status: EnterpriseStatus.APPROVED,
+
             },
             include: {
                 businessType: true,
-                // Lấy báo cáo mới nhất của doanh nghiệp để tính tổng số lao động thực tế
+                // Lấy báo cáo mới nhất của doanh nghiệp (cho tới năm được truy vấn) để tính tổng số lao động thực tế
                 reports: {
+                    where: {
+                        reportPeriod: {
+                            year: { lte: year },
+                            periodType: PeriodType.YEAR,
+                        },
+                        status: ReportStatus.APPROVED,
+                    },
                     orderBy: { reportPeriod: { year: 'desc' } },
                     take: 1,
                     select: { companyEmployeeTotal: true },
@@ -62,7 +71,10 @@ export class SummaryReportService {
         // 3. Lấy tất cả báo cáo đã tiếp nhận (APPROVED) trong năm & tỉnh đã chọn
         const reports = await this.prisma.report.findMany({
             where: {
-                reportPeriod: { year },
+                reportPeriod: {
+                    year,
+                    periodType: PeriodType.YEAR,
+                },
                 status: ReportStatus.APPROVED,
                 enterprise: {
                     provinceId,
