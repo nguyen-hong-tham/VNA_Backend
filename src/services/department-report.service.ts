@@ -34,7 +34,7 @@ export class DepartmentReportService {
     // Chuẩn hóa dữ liệu trả về theo thiết kế API
     const formattedData = data.map((report) => {
       let statusLabel = 'Không xác định';
-      if (report.status === 'DRAFT') {
+      if (report.status === 'REPORTING') {
         statusLabel = 'Đang báo cáo';
       } else if (report.status === 'SUBMITTED') {
         statusLabel = 'Chờ tiếp nhận';
@@ -90,7 +90,9 @@ export class DepartmentReportService {
     ]
     const statuses = [
       { value: 'REPORTING', label: 'Đang báo cáo' },
+      { value: 'SUBMITTED', label: 'Chờ tiếp nhận' },
       { value: 'APPROVED', label: 'Đã tiếp nhận' },
+      { value: 'REJECTED', label: 'Từ chối' },
     ];
     return {
       years,       // Trả về: [2023, 2024, 2025, ...]
