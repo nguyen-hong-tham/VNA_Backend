@@ -63,6 +63,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     EnterpriseController,
     EnterpriseRegistrationController,
     ReportController,
+    ReportPeriodController,
     DepartmentReportController,
     CategoryController,
     SummaryReportController,
