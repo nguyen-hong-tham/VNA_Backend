@@ -40,7 +40,7 @@ export class DepartmentReportRepository {
     // Ánh xạ trạng thái lọc từ DTO xuống DB
     if (filter.status) {
       if (filter.status === 'REPORTING') {
-        where.status = ReportStatus.REPORTING;
+        where.status = ReportStatus.DRAFT;
       } else if (filter.status === 'APPROVED') {
         where.status = ReportStatus.APPROVED;
       }
@@ -132,7 +132,7 @@ export class DepartmentReportRepository {
       const stats = statsMap.get(wardId)!;
       stats.total++;
 
-      if (r.status === ReportStatus.REPORTING) {
+      if (r.status === ReportStatus.DRAFT) {
         stats.draft++;
       } else if (r.status === ReportStatus.APPROVED || r.status === ReportStatus.SUBMITTED) {
         stats.submitted++;
