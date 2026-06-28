@@ -34,7 +34,7 @@ export class DepartmentReportService {
     // Chuẩn hóa dữ liệu trả về theo thiết kế API
     const formattedData = data.map((report) => {
       let statusLabel = 'Không xác định';
-      if (report.status === 'REPORTING') {
+      if (report.status === 'DRAFT') {
         statusLabel = 'Đang báo cáo';
       } else if (report.status === 'SUBMITTED') {
         statusLabel = 'Chờ tiếp nhận';
