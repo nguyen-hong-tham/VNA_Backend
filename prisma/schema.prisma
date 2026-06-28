@@ -45,7 +45,7 @@ enum CategoryType {
 }
 
 enum ReportStatus {
-  DRAFT
+  REPORTING
   SUBMITTED
   APPROVED
   REJECTED
@@ -288,7 +288,7 @@ model Report {
   id                   Int          @id @default(autoincrement())
   enterpriseId         Int          @map("enterprise_id")
   reportPeriodId       Int          @map("report_period_id")
-  status               ReportStatus @default(DRAFT)
+  status               ReportStatus @default(REPORTING)
   companyEmployeeTotal Int          @default(0) @map("company_employee_total")
   femaleEmployeeTotal  Int          @default(0) @map("female_employee_total")
   salaryFund           Decimal      @default(0) @map("salary_fund") @db.Decimal(18, 2)

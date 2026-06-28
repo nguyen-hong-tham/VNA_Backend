@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { BusinessTypeCode } from '../src/constants/business-type.constant';
 
 const prisma = new PrismaClient();
 
@@ -127,12 +128,16 @@ async function main() {
   // BUSINESS TYPES (6 records matching database screenshot)
   // ==================================================
   const businessTypeData = [
-    { code: '150', name: 'Doanh nghiệp tư nhân' },
-    { code: '120', name: 'Công ty TNHH 1 Thành viên' },
-    { code: '130', name: 'Công ty TNHH 2 Thành viên' },
-    { code: '140', name: 'Công ty hợp danh' },
-    { code: '110', name: 'Doanh nghiệp nhà nước' },
-    { code: '160', name: 'Công ty cổ phần' },
+    { code: BusinessTypeCode.PRIVATE_ENTERPRISE, name: 'Doanh nghiệp tư nhân' },
+    { code: BusinessTypeCode.TNHH_1TV, name: 'Công ty TNHH 1 Thành viên' },
+    { code: BusinessTypeCode.TNHH_2TV, name: 'Công ty TNHH 2 Thành viên' },
+    { code: BusinessTypeCode.PARTNERSHIP, name: 'Công ty hợp danh' },
+    { code: BusinessTypeCode.STATE_OWNED, name: 'Doanh nghiệp nhà nước' },
+    { code: BusinessTypeCode.JOINT_STOCK, name: 'Công ty cổ phần' },
+    { code: BusinessTypeCode.FOREIGN_INVESTED, name: 'Doanh nghiệp có vốn đầu tư nước ngoài' },
+    { code: BusinessTypeCode.COOPERATIVE, name: 'Đơn vị kinh tế tập thể' },
+    { code: BusinessTypeCode.INDIVIDUAL_HOUSEHOLD, name: 'Đơn vị kinh tế cá thể' },
+    { code: BusinessTypeCode.ADMINISTRATIVE, name: 'Đơn vị hành chính sự nghiệp, Đảng, đoàn thể, hiệp hội' },
   ];
 
   const businessTypeCodeToIdMap: Record<string, number> = {};
@@ -592,85 +597,97 @@ async function main() {
       taxCode: '0312345671',
       licenseNumber: 'GPD1000001',
       name: 'Công ty TNHH ABC',
-      businessTypeId: businessTypeCodeToIdMap['120'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.TNHH_1TV] || 1,
       businessFieldId: codeToIdMap['10'] || 1,
       registeredAddress: 'Quận 1, TP.HCM',
       representativeName: 'Nguyễn Văn A',
       officePhone: '0901111001',
       email: 'contact@abc.com',
       status: 'APPROVED' as const,
+      provinceId: 79,
+      wardId: 27424,
     },
     {
       userId: enterpriseUsers[1].id,
       taxCode: '0312345672',
       licenseNumber: 'GPD1000002',
       name: 'Công ty Cổ phần XYZ',
-      businessTypeId: businessTypeCodeToIdMap['160'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.JOINT_STOCK] || 1,
       businessFieldId: codeToIdMap['011'] || 1,
       registeredAddress: 'Quận 3, TP.HCM',
       representativeName: 'Trần Thị B',
       officePhone: '0901111002',
       email: 'contact@xyz.com',
       status: 'APPROVED' as const,
+      provinceId: 79,
+      wardId: 27424,
     },
     {
       userId: enterpriseUsers[2].id,
       taxCode: '0312345673',
       licenseNumber: 'GPD1000003',
       name: 'Hợp tác xã Nông nghiệp Xanh',
-      businessTypeId: businessTypes[2].id,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.COOPERATIVE] || 1,
       businessFieldId: codeToIdMap['01'] || 1,
       registeredAddress: 'Huyện Củ Chi, TP.HCM',
       representativeName: 'Lê Văn C',
       officePhone: '0901111003',
       email: 'contact@htxnn.com',
       status: 'APPROVED' as const,
+      provinceId: 79,
+      wardId: 27426,
     },
     {
       userId: enterpriseUsers[3].id,
       taxCode: '0312345674',
       licenseNumber: 'GPD1000004',
       name: 'Công ty TNHH MTV Khai Thác Mỏ',
-      businessTypeId: businessTypeCodeToIdMap['110'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.STATE_OWNED] || 1,
       businessFieldId: codeToIdMap['05'] || 1,
       registeredAddress: 'Quảng Ninh',
       representativeName: 'Phạm Thị D',
       officePhone: '0901111004',
       email: 'contact@khaithacmo.com',
       status: 'PENDING' as const,
+      provinceId: 22,
+      wardId: 10800,
     },
     {
       userId: enterpriseUsers[4].id,
       taxCode: '0312345675',
       licenseNumber: 'GPD1000005',
       name: 'Công ty Vận tải Đông Nam',
-      businessTypeId: businessTypeCodeToIdMap['160'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.JOINT_STOCK] || 1,
       businessFieldId: codeToIdMap['03'] || 1,
       registeredAddress: 'Bình Dương',
       representativeName: 'Hoàng Văn E',
       officePhone: '0901111005',
       email: 'contact@dongnamt.com',
       status: 'APPROVED' as const,
+      provinceId: 74,
+      wardId: 26800,
     },
     {
       userId: enterpriseUsers[5].id,
       taxCode: '0312345676',
       licenseNumber: 'GPD1000006',
       name: 'Công ty Dệt May Phương Nam',
-      businessTypeId: businessTypeCodeToIdMap['160'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.JOINT_STOCK] || 1,
       businessFieldId: codeToIdMap['10'] || 1,
       registeredAddress: 'Long An',
       representativeName: 'Vũ Thị F',
       officePhone: '0901111006',
       email: 'contact@detmaypn.com',
       status: 'APPROVED' as const,
+      provinceId: 80,
+      wardId: 27430,
     },
     {
       userId: enterpriseUsers[6].id,
       taxCode: '0312345677',
       licenseNumber: 'GPD1000007',
       name: 'Công ty Chế Biến Thực Phẩm Sao Mai',
-      businessTypeId: businessTypeCodeToIdMap['120'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.TNHH_1TV] || 1,
       businessFieldId: codeToIdMap['101'] || 1,
       registeredAddress: 'Tiền Giang',
       representativeName: 'Đặng Văn G',
@@ -678,32 +695,38 @@ async function main() {
       email: 'contact@saomaitp.com',
       status: 'REJECTED' as const,
       rejectReason: 'Hồ sơ chưa đầy đủ',
+      provinceId: 82,
+      wardId: 28000,
     },
     {
       userId: enterpriseUsers[7].id,
       taxCode: '0312345678',
       licenseNumber: 'GPD1000008',
       name: 'Công ty Xây Dựng Tiến Phát',
-      businessTypeId: businessTypeCodeToIdMap['160'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.JOINT_STOCK] || 1,
       businessFieldId: codeToIdMap['106'] || 1,
       registeredAddress: 'Đồng Nai',
       representativeName: 'Bùi Thị H',
       officePhone: '0901111008',
       email: 'contact@tienphatxd.com',
       status: 'APPROVED' as const,
+      provinceId: 75,
+      wardId: 27100,
     },
     {
       userId: enterpriseUsers[8].id,
       taxCode: '0312345679',
       licenseNumber: 'GPD1000009',
       name: 'Công ty Khai Thác Than Hồng Hà',
-      businessTypeId: businessTypeCodeToIdMap['110'] || 1,
+      businessTypeId: businessTypeCodeToIdMap[BusinessTypeCode.STATE_OWNED] || 1,
       businessFieldId: codeToIdMap['0510'] || 1,
       registeredAddress: 'Quảng Ngãi',
       representativeName: 'Ngô Văn I',
       officePhone: '0901111009',
       email: 'contact@honghakhoang.com',
       status: 'APPROVED' as const,
+      provinceId: 51,
+      wardId: 21000,
     },
   ];
 
@@ -711,7 +734,14 @@ async function main() {
     enterprisesData.map((e) =>
       prisma.enterprise.upsert({
         where: { userId: e.userId },
-        update: {},
+        update: {
+          name: e.name,
+          taxCode: e.taxCode,
+          licenseNumber: e.licenseNumber,
+          status: e.status,
+          provinceId: e.provinceId,
+          wardId: e.wardId,
+        },
         create: {
           ...e,
           approvedAt: e.status === 'APPROVED' ? new Date() : undefined,
@@ -815,11 +845,35 @@ async function main() {
     },
     {
       year: 2025,
+      periodType: 'HALF_YEAR' as const,
+      reportName: 'Báo cáo 6 tháng đầu năm 2025',
+      status: 'CLOSED' as const,
+      startDate: new Date('2025-01-01T00:00:00.000Z'),
+      endDate: new Date('2025-06-30T00:00:00.000Z'),
+    },
+    {
+      year: 2025,
       periodType: 'YEAR' as const,
       reportName: 'Báo cáo năm 2025',
       status: 'OPEN' as const,
       startDate: new Date('2025-01-01T00:00:00.000Z'),
       endDate: new Date('2025-12-31T00:00:00.000Z'),
+    },
+    {
+      year: 2026,
+      periodType: 'HALF_YEAR' as const,
+      reportName: 'Báo cáo 6 tháng đầu năm 2026',
+      status: 'OPEN' as const,
+      startDate: new Date('2026-01-01T00:00:00.000Z'),
+      endDate: new Date('2026-06-30T00:00:00.000Z'),
+    },
+    {
+      year: 2026,
+      periodType: 'YEAR' as const,
+      reportName: 'Báo cáo TNLĐ Cả Năm 2026',
+      status: 'OPEN' as const,
+      startDate: new Date('2025-12-31T00:00:00.000Z'),
+      endDate: new Date('2026-12-30T00:00:00.000Z'),
     },
   ];
 
@@ -840,28 +894,35 @@ async function main() {
   );
 
   // ==================================================
-  // REPORTS (10 records — 1 per approved enterprise × recent period)
+  // REPORTS (Seed reports for both 2025 and 2026, half-year and year)
   // ==================================================
   const approvedEnterprises = enterprises.filter(
-    (_, i) => enterprisesData[i]?.status === 'APPROVED',
+    (ent) => ent.status === 'APPROVED',
   );
 
-  const latestPeriod = reportPeriods[reportPeriods.length - 1]; // 2025 YEAR
+  const period2025Year = reportPeriods.find(p => p.year === 2025 && p.periodType === 'YEAR')!;
+  const period2025Half = reportPeriods.find(p => p.year === 2025 && p.periodType === 'HALF_YEAR')!;
+  const period2026Year = reportPeriods.find(p => p.year === 2026 && p.periodType === 'YEAR')!;
+  const period2026Half = reportPeriods.find(p => p.year === 2026 && p.periodType === 'HALF_YEAR')!;
 
-  const reportsData = approvedEnterprises.slice(0, 10).map((ent, i) => ({
-    enterpriseId: ent.id,
-    reportPeriodId: latestPeriod.id,
-    createdBy: enterpriseUsers[i]?.id ?? enterpriseUsers[0].id,
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-    status: (i % 3 === 0 ? 'DRAFT' : i % 3 === 1 ? 'SUBMITTED' : 'APPROVED') as
-      | 'DRAFT'
-      | 'SUBMITTED'
-      | 'APPROVED',
-    companyEmployeeTotal: 50 + i * 30,
-    femaleEmployeeTotal: 20 + i * 10,
-    salaryFund: 200000000 + i * 50000000,
-    submittedAt: i % 3 !== 0 ? new Date() : undefined,
-  }));
+  const periodsToSeed = [period2025Year, period2025Half, period2026Year, period2026Half].filter(Boolean);
+
+  const reportsData: any[] = [];
+
+  periodsToSeed.forEach((p) => {
+    approvedEnterprises.forEach((ent, i) => {
+      reportsData.push({
+        enterpriseId: ent.id,
+        reportPeriodId: p.id,
+        createdBy: enterpriseUsers[i % enterpriseUsers.length]?.id ?? enterpriseUsers[0].id,
+        status: (i % 2 === 0 ? 'REPORTING' : 'APPROVED') as any,
+        companyEmployeeTotal: 50 + i * 30,
+        femaleEmployeeTotal: 20 + i * 10,
+        salaryFund: 200000000 + i * 50000000,
+        submittedAt: i % 2 !== 0 ? new Date() : undefined,
+      });
+    });
+  });
 
   // Use createMany with skipDuplicates; fall back to upsert per record to handle unique constraint
   const reports: { id: number; enterpriseId: number }[] = [];
@@ -882,10 +943,10 @@ async function main() {
   }
 
   // ==================================================
-  // REPORT SECTIONS (10 records: 1 ACCIDENT section per report)
+  // REPORT SECTIONS (1 ACCIDENT section per report)
   // ==================================================
   const sections: { id: number }[] = [];
-  for (const report of reports.slice(0, 10)) {
+  for (const report of reports) {
     try {
       const section = await prisma.reportSection.create({
         data: {
@@ -913,7 +974,7 @@ async function main() {
   }
 
   // ==================================================
-  // REPORT ACCIDENT CASES (10 records)
+  // REPORT ACCIDENT CASES
   // ==================================================
   const accidentCauses = categoryData
     .filter((c) => c.type === 'ACCIDENT_CAUSE')
@@ -927,25 +988,29 @@ async function main() {
     .filter((c) => c.type === 'OCCUPATION')
     .map((c) => findCategory('OCCUPATION', c.code));
 
-  for (let i = 0; i < Math.min(10, sections.length); i++) {
-    await prisma.reportAccidentCase.create({
-      data: {
-        reportSectionId: sections[i % sections.length].id,
-        accidentCauseId: accidentCauses[i % accidentCauses.length]?.id,
-        injuryFactorId: injuryFactors[i % injuryFactors.length]?.id,
-        occupationId: occupations[i % occupations.length]?.id,
-        accidentCount: Math.floor(Math.random() * 5) + 1,
-        fatalAccidentCount: Math.floor(Math.random() * 2),
-        victimCount: Math.floor(Math.random() * 8) + 1,
-        deathCount: Math.floor(Math.random() * 2),
-        severelyInjuredCount: Math.floor(Math.random() * 3),
-        femaleVictimCount: Math.floor(Math.random() * 3),
-        medicalCost: (Math.floor(Math.random() * 20) + 2) * 1_000_000,
-        compensationCost: (Math.floor(Math.random() * 50) + 5) * 1_000_000,
-        salaryCompensation: (Math.floor(Math.random() * 15) + 2) * 1_000_000,
-        daysLost: Math.floor(Math.random() * 30) + 5,
-      },
-    });
+  for (let i = 0; i < sections.length; i++) {
+    try {
+      await prisma.reportAccidentCase.create({
+        data: {
+          reportSectionId: sections[i].id,
+          accidentCauseId: accidentCauses[i % accidentCauses.length]?.id,
+          injuryFactorId: injuryFactors[i % injuryFactors.length]?.id,
+          occupationId: occupations[i % occupations.length]?.id,
+          accidentCount: Math.floor(Math.random() * 5) + 1,
+          fatalAccidentCount: Math.floor(Math.random() * 2),
+          victimCount: Math.floor(Math.random() * 8) + 1,
+          deathCount: Math.floor(Math.random() * 2),
+          severelyInjuredCount: Math.floor(Math.random() * 3),
+          femaleVictimCount: Math.floor(Math.random() * 3),
+          medicalCost: (Math.floor(Math.random() * 20) + 2) * 1_000_000,
+          compensationCost: (Math.floor(Math.random() * 50) + 5) * 1_000_000,
+          salaryCompensation: (Math.floor(Math.random() * 15) + 2) * 1_000_000,
+          daysLost: Math.floor(Math.random() * 30) + 5,
+        },
+      });
+    } catch {
+      // ignore duplicate/creation errors
+    }
   }
 
   console.log('✅ Seed completed');
@@ -960,7 +1025,7 @@ async function main() {
   console.log(`   ReportPeriods: ${reportPeriods.length}`);
   console.log(`   Reports: ${reports.length}`);
   console.log(`   ReportSections: ${sections.length}`);
-  console.log(`   ReportAccidentCases: ${Math.min(10, sections.length)}`);
+  console.log(`   ReportAccidentCases: ${sections.length}`);
 }
 
 main()

@@ -176,7 +176,7 @@ export class ReportService {
         data: {
           enterpriseId: enterprise.id,
           reportPeriodId: periodId,
-          status: ReportStatus.DRAFT,
+          status: ReportStatus.REPORTING,
           createdBy: userId,
         },
       });
@@ -210,9 +210,7 @@ export class ReportService {
   }
 
   // 4. Lấy chi tiết một báo cáo
-  async getReportDetails(userId: number, reportId: number) {
-    const enterprise = await this.getEnterpriseByUserId(userId);
-
+  async getReportDetails(userId: number, reportId: number, userRole?: string) {
     const report = await this.prisma.report.findUnique({
       where: { id: reportId },
       include: {
@@ -235,8 +233,11 @@ export class ReportService {
       throw new NotFoundException('Không tìm thấy báo cáo');
     }
 
-    if (report.enterpriseId !== enterprise.id) {
-      throw new ForbiddenException('Bạn không có quyền truy cập báo cáo này');
+    if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
+      const enterprise = await this.getEnterpriseByUserId(userId);
+      if (report.enterpriseId !== enterprise.id) {
+        throw new ForbiddenException('Bạn không có quyền truy cập báo cáo này');
+      }
     }
 
     return this.attachTotalCost(report);
@@ -264,7 +265,7 @@ export class ReportService {
     }
 
     if (
-      report.status !== ReportStatus.DRAFT &&
+      report.status !== ReportStatus.REPORTING &&
       report.status !== ReportStatus.REJECTED
     ) {
       throw new BadRequestException(
@@ -677,7 +678,7 @@ export class ReportService {
     }
 
     if (
-      report.status !== ReportStatus.DRAFT &&
+      report.status !== ReportStatus.REPORTING &&
       report.status !== ReportStatus.REJECTED
     ) {
       throw new BadRequestException(
@@ -751,9 +752,7 @@ export class ReportService {
   }
 
   // 8. Xuất báo cáo ra file Word
-  async exportWordReport(userId: number, reportId: number): Promise<{ buffer: Buffer; fileName: string }> {
-    const enterprise = await this.getEnterpriseByUserId(userId);
-
+  async exportWordReport(userId: number, reportId: number, userRole?: string): Promise<{ buffer: Buffer; fileName: string }> {
     const report = await this.prisma.report.findUnique({
       where: { id: reportId },
       include: {
@@ -779,7 +778,11 @@ export class ReportService {
     });
 
     if (!report) throw new NotFoundException('Không tìm thấy báo cáo');
-    if (report.enterpriseId !== enterprise.id) throw new ForbiddenException('Bạn không có quyền xuất báo cáo này');
+
+    if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
+      const enterprise = await this.getEnterpriseByUserId(userId);
+      if (report.enterpriseId !== enterprise.id) throw new ForbiddenException('Bạn không có quyền xuất báo cáo này');
+    }
 
     const accSection = report.sections.find(s => s.sectionType === SectionType.ACCIDENT);
     const allwSection = report.sections.find(s => s.sectionType === SectionType.ALLOWANCE);

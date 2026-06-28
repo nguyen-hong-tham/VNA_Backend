@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { PrismaService } from './repositories/prisma.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -50,6 +51,45 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
+
+  // Dynamically query database for min/max years and inject into all Swagger query parameters named 'year'
+  let yearsEnum = [2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030];
+  try {
+    const prisma = app.get(PrismaService);
+    const agg = await prisma.reportPeriod.aggregate({
+      _min: { year: true },
+      _max: { year: true },
+    });
+    if (agg._min.year && agg._max.year) {
+      yearsEnum = [];
+      for (let y = agg._min.year; y <= agg._max.year; y++) {
+        yearsEnum.push(y);
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to query years for Swagger enum, using fallback range.', e);
+  }
+
+  if (document.paths) {
+    for (const pathKey of Object.keys(document.paths)) {
+      const pathItem = document.paths[pathKey];
+      for (const method of ['get', 'post', 'put', 'delete', 'patch']) {
+        const operation = pathItem[method];
+        if (operation && operation.parameters) {
+          const yearParam = operation.parameters.find(
+            (p: any) => p.name === 'year' && p.in === 'query',
+          ) as any;
+          if (yearParam) {
+            yearParam.schema = {
+              type: 'integer',
+              enum: yearsEnum,
+            };
+          }
+        }
+      }
+    }
+  }
+
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.PORT ?? 3000;
