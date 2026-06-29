@@ -1,8 +1,13 @@
 export const getEmailChangeOtpTemplate = (
   name: string | null,
+  taxCode: string | null,
   currentEmail: string,
   otp: string,
 ): string => {
+  const accountInfo = taxCode
+    ? `tài khoản đăng ký với mã số thuế ${taxCode}`
+    : `tài khoản ${name || ''}`;
+
   return `
     <!DOCTYPE html>
     <html>
@@ -70,7 +75,7 @@ export const getEmailChangeOtpTemplate = (
         <div class="content">
           <div class="welcome-text">Xin chào, ${name || 'bạn'},</div>
           <div class="description">
-            Bạn vừa yêu cầu thay đổi email cho tài khoản đăng ký với email hiện tại là ${currentEmail}. Dưới đây là mã xác thực OTP của bạn: <strong>${otp}</strong> <br>
+            Bạn vừa yêu cầu thay đổi email cho ${accountInfo}. Dưới đây là mã xác thực OTP của bạn: <strong>${otp}</strong> <br>
             Lưu ý quan trọng: Mã OTP có hiệu lực trong <strong>5 phút</strong>. <br>
             Không chia sẻ mã này với bất kì ai. <br>
             Nếu bạn không yêu cầu thay đổi email, vui lòng bỏ qua email này.
