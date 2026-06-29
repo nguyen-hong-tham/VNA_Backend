@@ -39,7 +39,19 @@ export class DepartmentReportRepository {
 
     // Ánh xạ trạng thái lọc từ DTO xuống DB
     if (filter.status) {
-      where.status = filter.status;
+      if (filter.status === 'REJECTED') {
+        // Tìm báo cáo bị từ chối mới (REPORTING có rejectReason) hoặc bị từ chối cũ (REJECTED đối với dữ liệu lịch sử)
+        where.OR = [
+          { status: ReportStatus.REPORTING, rejectReason: { not: null } },
+          { status: ReportStatus.REJECTED }
+        ];
+      } else if (filter.status === 'REPORTING') {
+        // Tìm báo cáo nháp chưa bị từ chối
+        where.status = ReportStatus.REPORTING;
+        where.rejectReason = null;
+      } else {
+        where.status = filter.status as ReportStatus;
+      }
     }
 
     // Lọc theo các trường thuộc bảng doanh nghiệp liên kết

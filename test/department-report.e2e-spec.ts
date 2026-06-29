@@ -346,9 +346,9 @@ describe('Department Reports e2e Tests', () => {
       const r1 = await prisma.report.findUnique({ where: { id: reportIds[0] } });
       const r2 = await prisma.report.findUnique({ where: { id: reportIds[1] } });
       
-      expect(r1?.status).toBe('REJECTED');
+      expect(r1?.status).toBe('REPORTING');
       expect(r1?.rejectReason).toBe('Lý do từ chối E2E số 1');
-      expect(r2?.status).toBe('REJECTED');
+      expect(r2?.status).toBe('REPORTING');
       expect(r2?.rejectReason).toBe('Lý do từ chối E2E số 2');
     });
   });

@@ -120,7 +120,7 @@ export class DepartmentReportController {
     @Post('bulk-reject')
     @ApiOperation({
         summary: '[Sở] Từ chối hàng loạt báo cáo tai nạn lao động và gửi email',
-        description: 'API cho phép cán bộ Sở từ chối tiếp nhận hàng loạt hồ sơ báo cáo, kèm lý do riêng cho từng hồ sơ. Hệ thống tự động cập nhật trạng thái thành REJECTED, lưu lý do và gửi email nhắc nhở cho từng doanh nghiệp.'
+        description: 'API cho phép cán bộ Sở từ chối tiếp nhận hàng loạt hồ sơ báo cáo, kèm lý do riêng cho từng hồ sơ. Hệ thống tự động cập nhật trạng thái thành REPORTING (để doanh nghiệp chỉnh sửa và nộp lại), lưu lý do và gửi email nhắc nhở cho từng doanh nghiệp.'
     })
     @ApiResponse({ status: 200, description: 'Từ chối thành công và đã gửi mail' })
     async bulkReject(@Body() dto: BulkRejectDto) {

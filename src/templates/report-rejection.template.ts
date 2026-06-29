@@ -1,6 +1,6 @@
 export const getReportRejectionTemplate = (
     enterpriseName: string,
-    enterpriseId: number,
+    taxCode: string,
     reason: string,
     endDate: string,
 ): string => {
@@ -74,7 +74,7 @@ export const getReportRejectionTemplate = (
         </div>
         <div class="content">
           <div class="title">Kính gửi Ban quản trị doanh nghiệp ${enterpriseName},</div>
-          <p>Sở Lao động - Thương binh và Xã hội thông báo hồ sơ báo cáo tai nạn lao động định kỳ của doanh nghiệp (Mã số DN: <strong>${enterpriseId}</strong>) đã bị <strong>TỪ CHỐI TIẾP NHẬN</strong> với lý do cụ thể như sau:</p>
+          <p>Sở Lao động - Thương binh và Xã hội thông báo hồ sơ báo cáo tai nạn lao động định kỳ của doanh nghiệp (Mã số thuế: <strong>${taxCode}</strong>) đã bị <strong>TỪ CHỐI TIẾP NHẬN</strong> với lý do cụ thể như sau:</p>
           
           <div class="reason-box">
             "${reason}"

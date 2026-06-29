@@ -125,11 +125,11 @@ export class MailService {
   async sendReportRejectionEmail(
     email: string,
     enterpriseName: string,
-    enterpriseId: number,
+    taxCode: string,
     reason: string,
     endDate: string,
   ): Promise<void> {
-    const htmlContent = getReportRejectionTemplate(enterpriseName, enterpriseId, reason, endDate);
+    const htmlContent = getReportRejectionTemplate(enterpriseName, taxCode, reason, endDate);
 
     try {
       await this.transporter.sendMail({

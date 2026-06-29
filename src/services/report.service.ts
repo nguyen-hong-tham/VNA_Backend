@@ -22,6 +22,25 @@ export class ReportService {
     private supabaseService: SupabaseService,
   ) {}
 
+  private isPastEndDate(endDate: Date | null | undefined): boolean {
+    if (!endDate) return false;
+    try {
+      const todayStr = new Date().toLocaleDateString('en-CA', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+      });
+      const endStr = new Date(endDate).toLocaleDateString('en-CA', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+      });
+      return todayStr > endStr;
+    } catch {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(0, 0, 0, 0);
+      return today.getTime() > end.getTime();
+    }
+  }
+
   // Helper: Lấy doanh nghiệp từ userId
   private async getEnterpriseByUserId(userId: number) {
     const enterprise = await this.prisma.enterprise.findUnique({
@@ -170,6 +189,12 @@ export class ReportService {
       return this.attachTotalCost(existing);
     }
 
+    if (this.isPastEndDate(period.endDate)) {
+      throw new BadRequestException(
+        'Đã quá thời hạn báo cáo, không thể khởi tạo báo cáo mới',
+      );
+    }
+
     // Tạo mới báo cáo + 2 section mặc định trong một transaction
     return this.prisma.$transaction(async (tx) => {
       const report = await tx.report.create({
@@ -253,7 +278,7 @@ export class ReportService {
 
     const report = await this.prisma.report.findUnique({
       where: { id: reportId },
-      include: { sections: true },
+      include: { sections: true, reportPeriod: true },
     });
 
     if (!report) {
@@ -266,10 +291,16 @@ export class ReportService {
 
     if (
       report.status !== ReportStatus.REPORTING &&
-      report.status !== ReportStatus.REJECTED
+      report.status !== ReportStatus.REJECTED // Cho phép REJECTED đối với dữ liệu lịch sử
     ) {
       throw new BadRequestException(
-        'Chỉ có thể chỉnh sửa báo cáo ở trạng thái Nháp hoặc Bị từ chối',
+        'Chỉ có thể chỉnh sửa báo cáo ở trạng thái Nháp',
+      );
+    }
+
+    if (this.isPastEndDate(report.reportPeriod?.endDate)) {
+      throw new BadRequestException(
+        'Đã quá thời hạn nộp báo cáo, không thể chỉnh sửa',
       );
     }
 
@@ -667,6 +698,7 @@ export class ReportService {
 
     const report = await this.prisma.report.findUnique({
       where: { id: reportId },
+      include: { reportPeriod: true },
     });
 
     if (!report) {
@@ -679,10 +711,16 @@ export class ReportService {
 
     if (
       report.status !== ReportStatus.REPORTING &&
-      report.status !== ReportStatus.REJECTED
+      report.status !== ReportStatus.REJECTED // Cho phép REJECTED đối với dữ liệu lịch sử
     ) {
       throw new BadRequestException(
-        'Chỉ có thể nộp báo cáo ở trạng thái Nháp hoặc Bị từ chối',
+        'Chỉ có thể nộp báo cáo ở trạng thái Nháp',
+      );
+    }
+
+    if (this.isPastEndDate(report.reportPeriod?.endDate)) {
+      throw new BadRequestException(
+        'Đã quá thời hạn nộp báo cáo, không thể nộp',
       );
     }
 
@@ -697,6 +735,7 @@ export class ReportService {
       data: {
         status: ReportStatus.SUBMITTED,
         submittedAt: new Date(),
+        rejectReason: null,
       },
     });
 
@@ -717,6 +756,7 @@ export class ReportService {
 
     const report = await this.prisma.report.findUnique({
       where: { id: reportId },
+      include: { reportPeriod: true },
     });
 
     if (!report) {
@@ -726,6 +766,21 @@ export class ReportService {
     if (report.enterpriseId !== enterprise.id) {
       throw new ForbiddenException(
         'Bạn không có quyền tải file cho báo cáo này',
+      );
+    }
+
+    if (
+      report.status !== ReportStatus.REPORTING &&
+      report.status !== ReportStatus.REJECTED // Cho phép REJECTED đối với dữ liệu lịch sử
+    ) {
+      throw new BadRequestException(
+        'Chỉ có thể tải file báo cáo ở trạng thái Nháp',
+      );
+    }
+
+    if (this.isPastEndDate(report.reportPeriod?.endDate)) {
+      throw new BadRequestException(
+        'Đã quá thời hạn nộp báo cáo, không thể tải file',
       );
     }
 
@@ -950,7 +1005,7 @@ export class ReportService {
     return this.prisma.report.findMany({
       where: {
         enterpriseId,
-        status: ReportStatus.REJECTED,
+        status: { in: [ReportStatus.REPORTING, ReportStatus.REJECTED] }, // Bao gồm REJECTED đối với dữ liệu lịch sử
         rejectReason: { not: null },
       },
       select: {
