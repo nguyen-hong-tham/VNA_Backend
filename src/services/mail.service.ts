@@ -5,7 +5,7 @@ import { getWelcomeTemplate } from '../templates/welcome.template';
 import { getPasswordResetOtpTemplate } from '../templates/password-reset.template';
 import { getEmailChangeOtpTemplate } from '../templates/email-change-otp.template';
 import { getEnterpriseRegistrationOtpTemplate } from '../templates/enterprise-registration-otp.template';
-
+import { getReportRejectionTemplate } from '../templates/report-rejection.template';
 @Injectable()
 export class MailService {
   private transporter: nodemailer.Transporter;
@@ -51,9 +51,10 @@ export class MailService {
   async sendEmailChangeOtpEmail(
     email: string,
     name: string | null,
+    taxCode: string | null,
     otp: string,
   ): Promise<void> {
-    const htmlContent = getEmailChangeOtpTemplate(name, email, otp);
+    const htmlContent = getEmailChangeOtpTemplate(name, taxCode, email, otp);
 
     try {
       await this.transporter.sendMail({
@@ -119,4 +120,33 @@ export class MailService {
       throw error;
     }
   }
+
+  // Thêm hàm gửi email từ chối 
+  async sendReportRejectionEmail(
+    email: string,
+    enterpriseName: string,
+    taxCode: string,
+    reason: string,
+    endDate: string,
+  ): Promise<void> {
+    const htmlContent = getReportRejectionTemplate(enterpriseName, taxCode, reason, endDate);
+
+    try {
+      await this.transporter.sendMail({
+        from: this.configService.get<string>('SMTP_FROM'),
+        to: email,
+        subject: 'Cảnh báo: Hồ sơ báo cáo tai nạn lao động bị từ chối tiếp nhận',
+        html: htmlContent,
+      });
+      this.logger.log(`Rejection notification email successfully sent to ${email}`);
+    } catch (error) {
+      const err = error as Error;
+      this.logger.error(
+        `Failed to send report rejection email to ${email}`,
+        err.stack,
+      );
+      throw error;
+    }
+  }
+
 }

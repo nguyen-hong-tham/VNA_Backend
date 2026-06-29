@@ -17,7 +17,7 @@ export class DepartmentReportRepository {
       enterpriseName?: string;
       taxCode?: string;
       periodType?: PeriodType;
-      status?: 'REPORTING' | 'APPROVED' | 'DRAFT' | 'SUBMITTED' | 'REJECTED';
+      status?: 'REPORTING' | 'APPROVED' | 'SUBMITTED' | 'REJECTED';
     },
     pagination: {
       page: number;
@@ -37,16 +37,20 @@ export class DepartmentReportRepository {
       };
     }
 
-    // Ánh xạ trạng thái lọc từ DTO xuống DB (Chấp nhận cả DRAFT và REPORTING)
+    // Ánh xạ trạng thái lọc từ DTO xuống DB
     if (filter.status) {
-      if (filter.status === 'REPORTING' || filter.status === 'DRAFT') {
+      if (filter.status === 'REJECTED') {
+        // Tìm báo cáo bị từ chối mới (REPORTING có rejectReason) hoặc bị từ chối cũ (REJECTED đối với dữ liệu lịch sử)
+        where.OR = [
+          { status: ReportStatus.REPORTING, rejectReason: { not: null } },
+          { status: ReportStatus.REJECTED }
+        ];
+      } else if (filter.status === 'REPORTING') {
+        // Tìm báo cáo nháp chưa bị từ chối
         where.status = ReportStatus.REPORTING;
-      } else if (filter.status === 'APPROVED') {
-        where.status = ReportStatus.APPROVED;
-      } else if (filter.status === 'SUBMITTED') {
-        where.status = ReportStatus.SUBMITTED;
-      } else if (filter.status === 'REJECTED') {
-        where.status = ReportStatus.REJECTED;
+        where.rejectReason = null;
+      } else {
+        where.status = filter.status as ReportStatus;
       }
     }
 

@@ -213,8 +213,9 @@ export class AuthService {
     );
 
     // Send email change OTP code
+    const taxCode = user.enterpriseProfile?.taxCode || null;
     this.mailService
-      .sendEmailChangeOtpEmail(email, user.fullName || user.username, otp)
+      .sendEmailChangeOtpEmail(email, user.fullName || user.username, taxCode, otp)
       .catch(() => { });
 
     console.log(

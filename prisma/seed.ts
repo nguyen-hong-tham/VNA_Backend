@@ -911,15 +911,46 @@ async function main() {
 
   periodsToSeed.forEach((p) => {
     approvedEnterprises.forEach((ent, i) => {
+      let status: any = 'REPORTING';
+      let rejectReason: string | undefined = undefined;
+      let submittedAt: Date | undefined = undefined;
+      let companyEmployeeTotal = 50 + i * 30;
+      let femaleEmployeeTotal = 20 + i * 10;
+
+      if (i % 4 === 0) {
+        status = 'REPORTING';
+      } else if (i % 4 === 1) {
+        status = 'APPROVED';
+        submittedAt = new Date();
+      } else if (i % 4 === 2) {
+        status = 'SUBMITTED';
+        submittedAt = new Date();
+        // Giả lập dữ liệu sai thật cho 1 số báo cáo chờ phê duyệt (ví dụ: i % 8 === 2)
+        if (i % 8 === 2) {
+          companyEmployeeTotal = 30;
+          femaleEmployeeTotal = 85; // Số lao động nữ (85) lớn hơn tổng số lao động (30) -> sai thực tế
+        }
+      } else {
+        status = 'REJECTED';
+        rejectReason = 'Số liệu tổng số lao động không trùng khớp với số liệu lao động nữ. Vui lòng kiểm tra và hiệu chỉnh lại.';
+        submittedAt = new Date();
+        // Giả lập dữ liệu sai thật cho báo cáo đã bị từ chối
+        companyEmployeeTotal = 40;
+        femaleEmployeeTotal = 75; // Số lao động nữ (75) lớn hơn tổng số lao động (40) -> sai thực tế
+      }
+
       reportsData.push({
         enterpriseId: ent.id,
         reportPeriodId: p.id,
-        createdBy: enterpriseUsers[i % enterpriseUsers.length]?.id ?? enterpriseUsers[0].id,
-        status: (i % 2 === 0 ? 'REPORTING' : 'APPROVED') as any,
-        companyEmployeeTotal: 50 + i * 30,
-        femaleEmployeeTotal: 20 + i * 10,
+        createdBy:
+          enterpriseUsers[i % enterpriseUsers.length]?.id ??
+          enterpriseUsers[0].id,
+        status,
+        rejectReason,
+        companyEmployeeTotal,
+        femaleEmployeeTotal,
         salaryFund: 200000000 + i * 50000000,
-        submittedAt: i % 2 !== 0 ? new Date() : undefined,
+        submittedAt,
       });
     });
   });
@@ -931,14 +962,23 @@ async function main() {
       const created = await prisma.report.create({ data: r });
       reports.push(created);
     } catch {
-      // Report already exists for this enterprise+period — skip
-      const existing = await prisma.report.findFirst({
+      // Report already exists for this enterprise+period — update its status and data
+      const updated = await prisma.report.update({
         where: {
-          enterpriseId: r.enterpriseId,
-          reportPeriodId: r.reportPeriodId,
+          uq_report: {
+            enterpriseId: r.enterpriseId,
+            reportPeriodId: r.reportPeriodId,
+          }
         },
+        data: {
+          status: r.status,
+          rejectReason: r.rejectReason,
+          companyEmployeeTotal: r.companyEmployeeTotal,
+          femaleEmployeeTotal: r.femaleEmployeeTotal,
+          submittedAt: r.submittedAt,
+        }
       });
-      if (existing) reports.push(existing);
+      reports.push(updated);
     }
   }
 

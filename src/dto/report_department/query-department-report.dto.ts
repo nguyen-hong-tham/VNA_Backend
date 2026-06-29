@@ -86,13 +86,13 @@ export class QueryDepartmentReportDto {
     periodType?: PeriodType;
 
     @ApiPropertyOptional({
-        description: 'Lọc theo trạng thái báo cáo (DRAFT/REPORTING: Đang báo cáo, SUBMITTED: Chờ tiếp nhận, APPROVED: Đã tiếp nhận, REJECTED: Bị từ chối)',
-        enum: ['REPORTING', 'APPROVED', 'DRAFT', 'SUBMITTED', 'REJECTED'],
+        description: 'Lọc theo trạng thái báo cáo (REPORTING: Đang báo cáo, SUBMITTED: Chờ tiếp nhận, APPROVED: Đã tiếp nhận, REJECTED: Bị từ chối)',
+        enum: ['REPORTING', 'APPROVED', 'SUBMITTED', 'REJECTED'],
         example: 'APPROVED',
     })
     @IsOptional()
-    @IsIn(['REPORTING', 'APPROVED', 'DRAFT', 'SUBMITTED', 'REJECTED'], {
+    @IsIn(['REPORTING', 'APPROVED', 'SUBMITTED', 'REJECTED'], {
         message: 'Trạng thái báo cáo không hợp lệ',
     })
-    status?: 'REPORTING' | 'APPROVED' | 'DRAFT' | 'SUBMITTED' | 'REJECTED';
+    status?: 'REPORTING' | 'APPROVED' | 'SUBMITTED' | 'REJECTED';
 }
