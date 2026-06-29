@@ -84,7 +84,7 @@ export class DepartmentReportService {
         await tx.report.update({
           where: { id: item.reportId },
           data: {
-            status: ReportStatus.REJECTED,
+            status: ReportStatus.REPORTING,
             rejectReason: item.note,
           }
         });
@@ -107,12 +107,12 @@ export class DepartmentReportService {
         : 'Không xác định';
 
       if (targetEmail) {
-        console.log(`[Email Notification] Đang gửi email từ chối đến Doanh nghiệp: "${report.enterprise.name}" (ID: ${report.enterpriseId}) | Email nhận: "${targetEmail}" | Lý do: "${rejectConfig?.note || ''}"`);
+        console.log(`[Email Notification] Đang gửi email từ chối đến Doanh nghiệp: "${report.enterprise.name}" (MST: ${report.enterprise.taxCode}) | Email nhận: "${targetEmail}" | Lý do: "${rejectConfig?.note || ''}"`);
         // Gửi email bất đồng bộ (chạy ngầm, không dùng await đồng bộ để tránh làm chậm phản hồi API)
         this.mailService.sendReportRejectionEmail(
           targetEmail,
           report.enterprise.name,
-          report.enterpriseId,
+          report.enterprise.taxCode,
           rejectConfig?.note || '',
           formattedEndDate,
         ).catch(err => {
@@ -152,14 +152,20 @@ export class DepartmentReportService {
     // Chuẩn hóa dữ liệu trả về theo thiết kế API
     const formattedData = data.map((report) => {
       let statusLabel = 'Không xác định';
+      let mappedStatus = report.status as string;
       if (report.status === 'REPORTING') {
-        statusLabel = 'Đang báo cáo';
+        if (report.rejectReason) {
+          statusLabel = 'Từ chối';
+          mappedStatus = 'REJECTED';
+        } else {
+          statusLabel = 'Đang báo cáo';
+        }
       } else if (report.status === 'SUBMITTED') {
         statusLabel = 'Chờ tiếp nhận';
       } else if (report.status === 'APPROVED') {
         statusLabel = 'Đã tiếp nhận';
       } else if (report.status === 'REJECTED') {
-        statusLabel = 'Từ chối';
+        statusLabel = 'Từ chối'; // Đối với dữ liệu lịch sử
       }
 
       return {
@@ -171,7 +177,7 @@ export class DepartmentReportService {
         wardId: report.enterprise.wardId,
         periodType: report.reportPeriod.periodType,
         year: report.reportPeriod.year,
-        status: report.status,
+        status: mappedStatus as any,
         statusLabel: statusLabel,
       }
     }
