@@ -298,7 +298,7 @@ model Report {
   createdBy            Int          @map("created_by")
   createdAt            DateTime     @default(now()) @map("created_at")
   updatedAt            DateTime     @default(now()) @updatedAt @map("updated_at")
-
+  rejectReason         String?      @map("reject_reason") @db.Text
   enterprise   Enterprise   @relation(fields: [enterpriseId], references: [id], map: "fk_report_enterprise")
   reportPeriod ReportPeriod @relation(fields: [reportPeriodId], references: [id], map: "fk_report_period")
   creator      User         @relation("ReportCreatedBy", fields: [createdBy], references: [id], map: "fk_report_user")

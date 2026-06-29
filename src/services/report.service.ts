@@ -945,4 +945,30 @@ export class ReportService {
 
     return { buffer: buf, fileName };
   }
+
+  async getRejectionNotificationsByEnterprise(enterpriseId: number) {
+    return this.prisma.report.findMany({
+      where: {
+        enterpriseId,
+        status: ReportStatus.REJECTED,
+        rejectReason: { not: null },
+      },
+      select: {
+        id: true,
+        enterpriseId: true,
+        rejectReason: true,
+        submittedAt: true,
+        updatedAt: true,
+        reportPeriod: {
+          select: {
+            id: true,
+            reportName: true,
+            year: true,
+            periodType: true,
+          }
+        }
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
 }

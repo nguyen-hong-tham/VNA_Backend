@@ -1,10 +1,12 @@
-import { Controller, Get, ParseIntPipe, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, ParseIntPipe, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { DepartmentReportService } from '../services/department-report.service';
 import { QueryDepartmentReportDto } from '../dto/report_department/query-department-report.dto';
+import { BulkApproveDto } from '../dto/report_department/bulk-approve.dto';
+import { BulkRejectDto } from '../dto/report_department/bulk-reject.dto';
 import { Request } from 'express';
 import { PeriodType } from '@prisma/client';
 
@@ -103,6 +105,26 @@ export class DepartmentReportController {
     })
     async getFilterOptions() {
         return this.departmentReportService.getFilterOptions();
+    }
+
+    @Post('bulk-approve')
+    @ApiOperation({
+        summary: '[Sở] Duyệt hàng loạt báo cáo tai nạn lao động',
+        description: 'API cho phép cán bộ Sở phê duyệt tiếp nhận hàng loạt hồ sơ báo cáo của doanh nghiệp (Trạng thái chuyển từ SUBMITTED thành APPROVED)'
+    })
+    @ApiResponse({ status: 200, description: 'Phê duyệt thành công' })
+    async bulkApprove(@Body() dto: BulkApproveDto) {
+        return this.departmentReportService.bulkApprove(dto);
+    }
+
+    @Post('bulk-reject')
+    @ApiOperation({
+        summary: '[Sở] Từ chối hàng loạt báo cáo tai nạn lao động và gửi email',
+        description: 'API cho phép cán bộ Sở từ chối tiếp nhận hàng loạt hồ sơ báo cáo, kèm lý do riêng cho từng hồ sơ. Hệ thống tự động cập nhật trạng thái thành REJECTED, lưu lý do và gửi email nhắc nhở cho từng doanh nghiệp.'
+    })
+    @ApiResponse({ status: 200, description: 'Từ chối thành công và đã gửi mail' })
+    async bulkReject(@Body() dto: BulkRejectDto) {
+        return this.departmentReportService.bulkReject(dto);
     }
 
 }

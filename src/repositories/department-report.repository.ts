@@ -17,7 +17,7 @@ export class DepartmentReportRepository {
       enterpriseName?: string;
       taxCode?: string;
       periodType?: PeriodType;
-      status?: 'REPORTING' | 'APPROVED' | 'DRAFT' | 'SUBMITTED' | 'REJECTED';
+      status?: 'REPORTING' | 'APPROVED' | 'SUBMITTED' | 'REJECTED';
     },
     pagination: {
       page: number;
@@ -37,17 +37,9 @@ export class DepartmentReportRepository {
       };
     }
 
-    // Ánh xạ trạng thái lọc từ DTO xuống DB (Chấp nhận cả DRAFT và REPORTING)
+    // Ánh xạ trạng thái lọc từ DTO xuống DB
     if (filter.status) {
-      if (filter.status === 'REPORTING' || filter.status === 'DRAFT') {
-        where.status = ReportStatus.REPORTING;
-      } else if (filter.status === 'APPROVED') {
-        where.status = ReportStatus.APPROVED;
-      } else if (filter.status === 'SUBMITTED') {
-        where.status = ReportStatus.SUBMITTED;
-      } else if (filter.status === 'REJECTED') {
-        where.status = ReportStatus.REJECTED;
-      }
+      where.status = filter.status;
     }
 
     // Lọc theo các trường thuộc bảng doanh nghiệp liên kết
