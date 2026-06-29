@@ -133,6 +133,7 @@ export class ReportService {
         id: true,
         reportPeriodId: true,
         status: true,
+        rejectReason: true,
         submittedAt: true,
         updatedAt: true,
       },
