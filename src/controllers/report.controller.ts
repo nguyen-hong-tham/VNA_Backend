@@ -175,4 +175,17 @@ export class ReportController {
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`);
     res.send(buffer);
   }
+
+  @Get('rejections/enterprise/:enterpriseId')
+  @Roles('ENTERPRISE', 'ADMIN', 'MANAGER')
+  @ApiOperation({
+    summary: '[Sở/Doanh nghiệp] Lấy danh sách thông báo từ chối báo cáo theo ID doanh nghiệp',
+    description: 'API phục vụ lấy các báo cáo bị từ chối của doanh nghiệp kèm lý do chi tiết để hiển thị thông báo cảnh báo lỗi trên Frontend.'
+  })
+  @ApiResponse({ status: 200, description: 'Danh sách thông báo từ chối' })
+  getRejectionNotifications(
+    @Param('enterpriseId', ParseIntPipe) enterpriseId: number,
+  ) {
+    return this.reportService.getRejectionNotificationsByEnterprise(enterpriseId);
+  }
 }
