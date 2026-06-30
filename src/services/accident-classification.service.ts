@@ -36,13 +36,14 @@ export class AccidentClassificationService {
 
     // Phương thức chính tính toán Phân loại tai nạn lao động
     async getAccidentClassifiedSummary(query: QuerySummaryReportDto): Promise<SummaryReportPartIIResponse> {
+        const { year, provinceId, periodType = PeriodType.YEAR } = query;
         console.log("ACCIDENT SERVICE QUERY:", query, "TYPES:", typeof query.year, typeof query.provinceId);
         // Bước A: Tải danh sách báo cáo, chỉ include sâu đến phần cases chi tiết
         const reports = await this.prisma.report.findMany({
             where: {
-                reportPeriod: { year: query.year, periodType: PeriodType.YEAR },
+                reportPeriod: { year, periodType },
                 status: ReportStatus.APPROVED,
-                enterprise: { provinceId: query.provinceId, status: EnterpriseStatus.APPROVED }
+                enterprise: { provinceId, status: EnterpriseStatus.APPROVED }
             },
             include: {
                 sections: {

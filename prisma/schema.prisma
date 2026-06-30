@@ -259,7 +259,7 @@ model ReportPeriod {
 
   reports Report[]
 
-  @@unique([year, periodType, startDate], name: "uq_report_period")
+  @@unique([year, periodType], name: "uq_report_period")
   @@map("report_periods")
 }
 

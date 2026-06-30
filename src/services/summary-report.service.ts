@@ -48,7 +48,7 @@ export class SummaryReportService {
     ) { }
 
     async getGeneralSummary(query: QuerySummaryReportDto) {
-        const { year, provinceId } = query;
+        const { year, provinceId, periodType = PeriodType.YEAR } = query;
 
         // 1. Định nghĩa cấu trúc các nhóm loại hình doanh nghiệp (đúng 9 nhóm theo yêu cầu)
         const groupsConfig = [
@@ -77,7 +77,7 @@ export class SummaryReportService {
                     where: {
                         reportPeriod: {
                             year: { lte: year },
-                            periodType: PeriodType.YEAR,
+                            periodType,
                         },
                         status: ReportStatus.APPROVED,
                     },
@@ -93,7 +93,7 @@ export class SummaryReportService {
             where: {
                 reportPeriod: {
                     year,
-                    periodType: PeriodType.YEAR,
+                    periodType,
                 },
                 status: ReportStatus.APPROVED,
                 enterprise: {
@@ -210,10 +210,13 @@ export class SummaryReportService {
         grandTotal.ktnld = totalKtnld.toFixed(2);
         grandTotal.kChet = totalKChet.toFixed(2);
 
+        const periodText = periodType === PeriodType.HALF_YEAR ? '6 tháng đầu năm' : 'cả năm';
+
         return {
-            title: `Báo cáo tổng hợp tình hình tai nạn lao động năm ${year}`,
+            title: `Báo cáo tổng hợp tình hình tai nạn lao động ${periodText} ${year}`,
             provinceId,
             year,
+            periodType,
             summaryTable: [grandTotal, ...formattedRows],
         };
     }
