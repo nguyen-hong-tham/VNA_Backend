@@ -884,7 +884,6 @@ async function main() {
           uq_report_period: {
             year: p.year,
             periodType: p.periodType,
-            startDate: p.startDate,
           },
         },
         update: {},

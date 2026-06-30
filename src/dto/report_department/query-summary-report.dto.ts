@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsInt, IsNotEmpty } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
+import { PeriodType } from '@prisma/client';
 
 export class QuerySummaryReportDto {
     @ApiProperty({
@@ -20,4 +21,14 @@ export class QuerySummaryReportDto {
     @Transform(({ value }) => parseInt(value, 10))
     @IsInt()
     provinceId: number;
+
+    @ApiPropertyOptional({
+        description: 'Kỳ báo cáo (HALF_YEAR: 6 tháng, YEAR: Cả năm). Mặc định là YEAR.',
+        enum: PeriodType,
+        example: PeriodType.YEAR,
+    })
+    @IsOptional()
+    @IsEnum(PeriodType, { message: 'Kỳ báo cáo không hợp lệ' })
+    periodType?: PeriodType = PeriodType.YEAR;
 }
+
