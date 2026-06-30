@@ -911,6 +911,9 @@ export class ReportService {
     const accTotal = (field: string) => getSectionField(accSection as Record<string, unknown>, field);
     const allwTotal = (field: string) => getSectionField(allwSection as Record<string, unknown>, field);
 
+    const mlh = String(report.enterprise?.businessType?.code ?? '').padStart(4, ' ');
+    const mlv = String(report.enterprise?.businessField?.code ?? '').padStart(4, ' ');
+
     const data = {
       // Thông tin chung
       ten_dn: report.enterprise?.name ?? '',
@@ -922,6 +925,16 @@ export class ReportService {
       ma_loai_hinh: report.enterprise?.businessType?.code ?? '',
       linh_vuc: report.enterprise?.businessField?.name ?? '',
       ma_linh_vuc: report.enterprise?.businessField?.code ?? '',
+
+      // Mã phân rã theo từng ô (mỗi ô 1 ký tự)
+      mlh_1: mlh[0],
+      mlh_2: mlh[1],
+      mlh_3: mlh[2],
+      mlh_4: mlh[3],
+      mlv_1: mlv[0],
+      mlv_2: mlv[1],
+      mlv_3: mlv[2],
+      mlv_4: mlv[3],
 
       // Thông tin lao động
       tong_lao_dong: fmtNum(report.companyEmployeeTotal),
